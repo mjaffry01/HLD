@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Load Balancing, Sharding, and Consistent Hashing Explained</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <style>
+        /* General Styles */
+        body {
+            padding-top: 20px;
+            background-color: #f8f9fa;
+        }
+
+        h1, h2, h3, h4 {
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+
+        p, ul, ol {
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        /* Server and Shard Styles */
+        .server, .shard {
+            text-align: center;
+            margin: 20px;
+        }
+
+        .server-icon {
+            font-size: 50px;
+            color: #17a2b8;
+        }
+
+        .shard-icon {
+            font-size: 50px;
+            color: #ffc107;
+        }
+
+        .arrow-icon {
+            font-size: 30px;
+            color: #28a745;
+            margin: 0 10px;
+        }
+
+        .heartbeat {
+            color: #dc3545;
+            animation: heartbeat 1s infinite;
+        }
+
+        @keyframes heartbeat {
+            0% {
+                transform: scale(1);
+            }
+
+            25% {
+                transform: scale(1.1);
+            }
+
+            50% {
+                transform: scale(1);
+            }
+
+            75% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Simulation Styles */
+        #hash-ring {
+            position: relative;
+            width: 600px;
+            height: 600px;
+            margin: 0 auto;
+            border-radius: 50%;
+            border: 10px solid #007bff;
+            background-color: #ffffff;
+            margin-bottom: 30px;
+        }
+
+        .server-node {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: #28a745;
+            border: 2px solid #155724;
+            border-radius: 50%;
+            text-align: center;
+            color: white;
+            line-height: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+
+        .data-point {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #dc3545;
+            border: 2px solid #721c24;
+            border-radius: 50%;
+            text-align: center;
+            color: white;
+            line-height: 20px;
+            font-size: 12px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+
+        #controls {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        #legend {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        #legend .legend-item {
+            display: inline-block;
+            margin-right: 20px;
+        }
+
+        #legend .legend-color {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
+            margin-right: 5px;
+            border-radius: 50%;
+        }
+
+        /* Tooltip styles */
+        .tooltip-inner {
+            max-width: 200px;
+            text-align: center;
+        }
+
+        /* Hash ring labels */
+        .hash-label {
+            position: absolute;
+            font-size: 12px;
+            color: #6c757d;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        /* Text-to-Speech Controls */
+        #tts-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        #tts-controls .btn {
+            margin-left: 5px;
+        }
+
+        /* Media query for smaller screens */
+        @media (max-width: 767px) {
+            #hash-ring {
+                width: 100%;
+                height: 0;
+                padding-bottom: 100%;
+            }
+
+            .server-node, .data-point {
+                width: 5%;
+                height: 5%;
+                line-height: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Text-to-Speech Controls -->
+    <div id="tts-controls">
+        <button id="tts-play" class="btn btn-primary" title="Play">
+            <i class="fas fa-play"></i>
+        </button>
+        <button id="tts-pause" class="btn btn-warning" title="Pause">
+            <i class="fas fa-pause"></i>
+        </button>
+        <button id="tts-stop" class="btn btn-danger" title="Stop">
+            <i class="fas fa-stop"></i>
+        </button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <section id="content">
+            <h1 class="text-center">Understanding Load Balancing, Sharding, and Consistent Hashing</h1>
+
+            <!-- Load Balancing Section -->
+            <section id="load-balancing">
+                <h2><i class="fas fa-balance-scale"></i> Load Balancing</h2>
+                <p>
+                    Load balancing is essential for distributing incoming requests among multiple servers to enhance performance and prevent a single point of failure.
+                </p>
+
+                <!-- Diagram of Load Balancer and Servers -->
+                <div class="d-flex justify-content-center align-items-center flex-wrap">
+                    <div class="server">
+                        <i class="fas fa-users server-icon"></i>
+                        <p>Clients</p>
+                    </div>
+                    <i class="fas fa-arrow-right arrow-icon"></i>
+                    <div class="server">
+                        <i class="fas fa-server server-icon"></i>
+                        <p>Load Balancer</p>
+                    </div>
+                    <i class="fas fa-arrow-right arrow-icon"></i>
+                    <div class="d-flex flex-wrap">
+                        <div class="server">
+                            <i class="fas fa-desktop server-icon"></i>
+                            <p>Server 1</p>
+                        </div>
+                        <div class="server">
+                            <i class="fas fa-desktop server-icon"></i>
+                            <p>Server 2</p>
+                        </div>
+                        <div class="server">
+                            <i class="fas fa-desktop server-icon"></i>
+                            <p>Server 3</p>
+                        </div>
+                        <div class="server">
+                            <i class="fas fa-desktop server-icon"></i>
+                            <p>Server 4</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>How Load Balancers Work</h3>
+                <p>
+                    When servers start, they register themselves with the load balancer. The load balancer keeps track of active servers and distributes incoming requests among them based on several factors.
+                </p>
+
+                <h4>Server Registration</h4>
+                <p>
+                    Servers send a registration request to the load balancer's endpoint to announce their availability. This helps in dynamic environments where servers are frequently added or removed.
+                </p>
+
+                <h3>Load Distribution Algorithms</h3>
+                <p>
+                    The load balancer decides where to forward requests using algorithms like:
+                </p>
+
+                <ul>
+                    <li><strong>Round Robin:</strong> Distributes requests sequentially to each server in a circular order. This works well when all servers have similar capacity.</li>
+                    <li><strong>Weighted Round Robin:</strong> Assigns weights to servers based on their capacity, distributing more requests to higher-capacity servers.</li>
+                </ul>
+
+                <!-- Round Robin Illustration -->
+                <h4>Round Robin Example</h4>
+                <div class="text-center">
+                    <button class="btn btn-primary" onclick="simulateRoundRobin()">Simulate Round Robin</button>
+                    <div id="roundRobinOutput" class="mt-3"></div>
+                </div>
+
+                <h3>Detecting Dead Servers</h3>
+                <p>
+                    Load balancers use <strong>health checks</strong> or <strong>heartbeats</strong> to detect server failures.
+                </p>
+                <ul>
+                    <li><strong>Health Checks:</strong> The load balancer periodically pings servers to ensure they are responsive. If no response is received, the server is marked as dead.</li>
+                    <li><strong>Heartbeats:</strong> Servers send regular signals to the load balancer to indicate they are alive. If the load balancer stops receiving these heartbeats, it assumes the server is down.</li>
+                </ul>
+
+                <!-- Heartbeat Animation -->
+                <div class="text-center">
+                    <i class="fas fa-heartbeat heartbeat fa-3x"></i>
+                    <p>Server Heartbeat</p>
+                </div>
+            </section>
+
+            <!-- Sharding Section -->
+            <section id="sharding">
+                <h2><i class="fas fa-database"></i> Sharding</h2>
+                <p>
+                    Sharding is the process of partitioning data across multiple machines when one machine cannot store all the data.
+                </p>
+
+                <h3>Sharding Key</h3>
+                <p>
+                    A <strong>sharding key</strong> is an attribute used to determine how data is divided among shards. Choosing the right sharding key is crucial for efficient data retrieval and storage.
+                </p>
+
+                <h4>Example: Bookmarking Service</h4>
+                <p>
+                    In a bookmarking service, using <strong>User ID</strong> as the sharding key ensures all bookmarks of a user are stored on the same shard. This allows for efficient retrieval of user-specific data.
+                </p>
+
+                <!-- Sharding Illustration -->
+                <div class="d-flex justify-content-center flex-wrap">
+                    <div class="shard">
+                        <i class="fas fa-server shard-icon"></i>
+                        <p>Shard 1<br><small>User IDs: 1-2500</small></p>
+                    </div>
+                    <div class="shard">
+                        <i class="fas fa-server shard-icon"></i>
+                        <p>Shard 2<br><small>User IDs: 2501-5000</small></p>
+                    </div>
+                    <div class="shard">
+                        <i class="fas fa-server shard-icon"></i>
+                        <p>Shard 3<br><small>User IDs: 5001-7500</small></p>
+                    </div>
+                    <div class="shard">
+                        <i class="fas fa-server shard-icon"></i>
+                        <p>Shard 4<br><small>User IDs: 7501-10000</small></p>
+                    </div>
+                </div>
+
+                <h3>Sharding Strategies</h3>
+                <ul>
+                    <li><strong>Modulo-Based Sharding:</strong> Shards are determined by calculating <code>shard_number = user_id % number_of_shards</code>. However, changing the number of shards requires moving data to rebalance, which can be resource-intensive.</li>
+                    <li><strong>Range-Based Sharding:</strong> Data is partitioned based on value ranges of the sharding key, which can lead to imbalanced load if certain ranges receive much more traffic.</li>
+                    <li><strong>Consistent Hashing:</strong> This technique minimizes data movement when shards are added or removed, providing a more scalable solution for dynamic environments.</li>
+                </ul>
+
+                <!-- Consistent Hashing Illustration -->
+                <div class="text-center">
+                    <img src="https://i.imgur.com/TYV6BBZ.png" alt="Consistent Hashing Diagram" class="img-fluid">
+                    <p><small>Consistent Hashing Ring</small></p>
+                </div>
+            </section>
+
+            <!-- Consistent Hashing and Caching Section -->
+            <section id="consistent-hashing">
+                <h2><i class="fas fa-project-diagram"></i> Introduction to Consistent Hashing and Caching</h2>
+                <p>
+                    Today, we're going to explore consistent hashing—a concept that is often misunderstood yet critical in system design. We'll also touch on caching as it relates to consistent hashing.
+                </p>
+
+                <h3>The Need for Sharding</h3>
+                <p>
+                    When a single database can't handle all incoming requests due to high load or data volume, we need to distribute the data across multiple databases—a process known as sharding. Sharding involves partitioning your data so that each shard (or database) contains a subset of the total data.
+                </p>
+
+                <h3>Choosing a Sharding Key</h3>
+                <p>
+                    A crucial aspect of sharding is selecting an appropriate sharding key. For example, we might choose <code>user_id</code> as our sharding key. The challenge then becomes: how do we distribute <code>user_id</code>s across multiple databases effectively?
+                </p>
+
+                <h3>Common Sharding Methods</h3>
+                <ol>
+                    <li><strong>Modulo-Based Sharding:</strong> Assigns data to shards based on a modulo operation. For instance, <code>shard_id = user_id % number_of_shards</code>.</li>
+                    <li><strong>Range-Based Sharding:</strong> Divides data into ranges. For example, <code>user_id</code>s from 1 to 1,000,000 go to Shard 1, 1,000,001 to 2,000,000 to Shard 2, and so on.</li>
+                </ol>
+
+                <h3>Characteristics of a Good Sharding Algorithm</h3>
+                <p>A good sharding algorithm should:</p>
+                <ol>
+                    <li><strong>Be Fast:</strong> The computation to determine the shard should be quick.</li>
+                    <li><strong>Balance the Load:</strong> Data should be evenly distributed across all shards to prevent hotspots.</li>
+                    <li><strong>Minimize Data Movement:</strong> Adding or removing shards should require minimal data redistribution.</li>
+                </ol>
+
+                <h3>Comparing Sharding Methods</h3>
+                <p>Let's create a table to compare modulo-based and range-based sharding based on these characteristics:</p>
+
+                <table class="table table-bordered">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Sharding Method</th>
+                            <th>Fast</th>
+                            <th>Balanced</th>
+                            <th>Minimal Data Movement</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Modulo-Based Sharding</td>
+                            <td>Yes</td>
+                            <td>Yes</td>
+                            <td>No</td>
+                        </tr>
+                        <tr>
+                            <td>Range-Based Sharding</td>
+                            <td>Yes</td>
+                            <td>No</td>
+                            <td>Yes</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p>
+                    <strong>Modulo-Based Sharding</strong> is fast and balances the load but requires significant data reshuffling when shards are added or removed.
+                </p>
+                <p>
+                    <strong>Range-Based Sharding</strong> is fast and minimizes data movement during scaling but can lead to unbalanced shards if data isn't uniformly distributed.
+                </p>
+
+                <h3>The Problem with Traditional Sharding</h3>
+                <p>
+                    Traditional sharding methods face a trade-off between load balancing and data movement:
+                </p>
+                <ul>
+                    <li><strong>Load Balancing:</strong> Modulo-based sharding distributes data evenly but requires extensive data transfer when scaling.</li>
+                    <li><strong>Data Movement:</strong> Range-based sharding minimizes data movement but can result in uneven load distribution.</li>
+                </ul>
+
+                <h3>Introducing Consistent Hashing</h3>
+                <p>
+                    Consistent hashing addresses these issues by providing a method that is fast, balances the load, and minimizes data movement during scaling.
+                </p>
+
+                <h3>How Consistent Hashing Works</h3>
+                <ol>
+                    <li><strong>Hash Ring:</strong> Imagine a circle (hash ring) representing the entire range of hash values, say from 0 to 2³² - 1.</li>
+                    <li><strong>Placing Servers on the Ring:</strong>
+                        <ul>
+                            <li>Each server (or shard) is assigned one or more positions on the ring using a hash function.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Mapping Data to Servers:</strong>
+                        <ul>
+                            <li>Each data item (e.g., <code>user_id</code>) is hashed to a point on the ring.</li>
+                            <li>The data is assigned to the first server encountered when moving clockwise around the ring from the data's hash point.</li>
+                        </ul>
+                    </li>
+                </ol>
+
+                <h3>Example with Simplified Hash Values</h3>
+                <p>
+                    For simplicity, let's consider a hash ring with values from 1 to 20 and four servers:
+                </p>
+                <ul>
+                    <li><strong>Server Positions:</strong>
+                        <ul>
+                            <li>Server 1: Position 14</li>
+                            <li>Server 2: Position 7</li>
+                            <li>Server 3: Position 19</li>
+                            <li>Server 4: Position 2</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h3>Assigning Data to Servers</h3>
+                <p>
+                    When a request comes in for a <code>user_id</code>, we compute its hash value within the range 1 to 20. Starting from this hash value on the ring, we move clockwise until we find the next server.
+                </p>
+                <p>
+                    <strong>Example:</strong>
+                </p>
+                <ul>
+                    <li>If <code>user_id</code> hashes to 10, we move clockwise and find Server 1 at position 14. Therefore, this <code>user_id</code> is handled by Server 1.</li>
+                </ul>
+
+                <h3>Advantages of Consistent Hashing</h3>
+                <ul>
+                    <li><strong>Fast:</strong> Hash computations are quick.</li>
+                    <li><strong>Balanced:</strong> Hash functions distribute data evenly if well-designed.</li>
+                    <li><strong>Minimal Data Movement:</strong> When servers are added or removed, only a small portion of data keys need to be remapped.</li>
+                </ul>
+
+                <h3>Challenges with Basic Consistent Hashing</h3>
+                <p>
+                    Despite its benefits, basic consistent hashing can still face issues:
+                </p>
+                <ul>
+                    <li><strong>Load Imbalance:</strong> With a small number of servers, data might not be evenly distributed.</li>
+                    <li><strong>Server Failure Impact:</strong> If a server fails, all its data is reassigned to the next server, potentially overloading it.</li>
+                </ul>
+
+                <h3>Optimizing Consistent Hashing with Virtual Nodes</h3>
+                <p>
+                    To overcome these challenges, we introduce <strong>virtual nodes (vnodes)</strong>:
+                </p>
+                <ul>
+                    <li><strong>Multiple Positions per Server:</strong>
+                        <ul>
+                            <li>Each physical server is assigned multiple positions on the hash ring.</li>
+                            <li>These positions are determined by hashing the server's identifier multiple times with different hash functions or seeds.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Improved Load Distribution:</strong>
+                        <ul>
+                            <li>By having multiple virtual nodes per server, data is more evenly spread across all servers.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Reduced Impact of Server Changes:</strong>
+                        <ul>
+                            <li>Adding or removing a server affects only a fraction of the data, minimizing the risk of overload.</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h3>Benefits of Using Virtual Nodes</h3>
+                <ul>
+                    <li><strong>Enhanced Load Balancing:</strong> More granular distribution of data across servers.</li>
+                    <li><strong>Scalability:</strong> Easier to add or remove servers without significant data reshuffling.</li>
+                    <li><strong>Fault Tolerance:</strong> Minimizes the impact of server failures on the overall system.</li>
+                </ul>
+
+                <h3>Conclusion</h3>
+                <p>
+                    Consistent hashing, especially when optimized with virtual nodes, provides an effective method for distributing data across multiple servers. It meets the key criteria of a good sharding algorithm:
+                </p>
+                <ul>
+                    <li><strong>Fast:</strong> Quick hash computations for data placement.</li>
+                    <li><strong>Balanced:</strong> Even data distribution reduces hotspots.</li>
+                    <li><strong>Minimal Data Movement:</strong> Scaling up or down requires only minimal data redistribution.</li>
+                </ul>
+                <p>
+                    By leveraging consistent hashing, systems can achieve high scalability and reliability, essential for handling large-scale applications.
+                </p>
+            </section>
+
+            <!-- Simulation Section -->
+            <h2><i class="fas fa-play-circle"></i> Interactive Consistent Hashing Simulation</h2>
+            <p>
+                Below is an interactive simulation that demonstrates how consistent hashing with virtual nodes works. You can add or remove servers and observe how data points are redistributed on the hash ring.
+            </p>
+
+            <!-- Legend -->
+            <div id="legend">
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: #28a745; border: 2px solid #155724;"></span>
+                    <span>Server Node</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: #dc3545; border: 2px solid #721c24;"></span>
+                    <span>Data Point</span>
+                </div>
+            </div>
+
+            <!-- Hash Ring Visualization -->
+            <div id="hash-ring">
+                <!-- Hash labels will be added via JavaScript -->
+            </div>
+
+            <!-- Controls -->
+            <div id="controls">
+                <button id="add-server" class="btn btn-success">
+                    <i class="fas fa-plus-circle"></i> Add Server
+                </button>
+                <button id="remove-server" class="btn btn-danger">
+                    <i class="fas fa-minus-circle"></i> Remove Server
+                </button>
+                <button id="reset" class="btn btn-secondary">
+                    <i class="fas fa-sync-alt"></i> Reset
+                </button>
+            </div>
+
+            <!-- Philosophy Section -->
+            <section id="philosophy">
+                <h2><i class="fas fa-lightbulb"></i> Philosophical Insight</h2>
+                <p>
+                    Life is full of random decisions that, over time, balance out. Similarly, randomization in load balancing and sharding often leads to a balanced and efficient system.
+                </p>
+            </section>
+
+            <!-- Footer -->
+            <footer class="text-center mt-5 mb-3">
+                <p>&copy; 2023 Load Balancing and Sharding Tutorial</p>
+            </footer>
+        </section>
+    </div>
+
+    <!-- JavaScript for Interactive Elements -->
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Simulation Script -->
+    <script>
+        $(document).ready(function() {
+            const hashRing = $('#hash-ring');
+            const ringRadius = hashRing.width() / 2;
+            const ringCenter = { x: ringRadius, y: ringRadius };
+            let servers = [];
+            let dataPoints = [];
+            let serverCount = 0;
+            const dataPointCount = 60; // Number of data points
+
+            // Function to add hash labels around the ring
+            function addHashLabels() {
+                const totalLabels = 36; // For every 10 degrees
+                for (let i = 0; i < totalLabels; i++) {
+                    let angleDeg = (i * 10) % 360;
+                    let angleRad = (angleDeg * Math.PI) / 180;
+                    let position = angleToPosition(angleRad, ringRadius - 10);
+                    let label = $('<div class="hash-label">' + angleDeg + '°</div>');
+                    label.css({
+                        left: position.x + 'px',
+                        top: position.y + 'px',
+                        transform: 'translate(-50%, -50%)'
+                    });
+                    hashRing.append(label);
+                }
+            }
+
+            // Function to add a server
+            function addServer() {
+                serverCount++;
+                let serverId = 'S' + serverCount;
+                // Assign multiple virtual nodes per server
+                const virtualNodes = 5;
+                for (let i = 0; i < virtualNodes; i++) {
+                    let hash = hashFunction(serverId + '-' + i);
+                    let angle = hashToAngle(hash);
+                    let position = angleToPosition(angle, ringRadius - 30); // Adjust position to fit within ring
+                    let serverNode = $('<div class="server-node" data-server="' + serverId + '"><i class="fas fa-server"></i></div>');
+                    serverNode.css({
+                        left: position.x + 'px',
+                        top: position.y + 'px',
+                        transform: 'translate(-50%, -50%)'
+                    });
+                    serverNode.tooltip({
+                        title: 'Server ' + serverId + '<br>VN Hash: ' + hash + '°',
+                        html: true,
+                        placement: 'top'
+                    });
+                    hashRing.append(serverNode);
+                    servers.push({ id: serverId, hash: hash });
+                }
+                redistributeData();
+            }
+
+            // Function to remove a server
+            function removeServer() {
+                if (serverCount === 0) return;
+                let serverId = 'S' + serverCount;
+                $('.server-node[data-server="' + serverId + '"]').remove();
+                servers = servers.filter(s => s.id !== serverId);
+                serverCount--;
+                redistributeData();
+            }
+
+            // Hash function (simple implementation)
+            function hashFunction(key) {
+                let hash = 0;
+                for (let i = 0; i < key.length; i++) {
+                    hash = (hash << 5) - hash + key.charCodeAt(i);
+                    hash |= 0; // Convert to 32bit integer
+                }
+                return Math.abs(hash) % 360; // Modulo 360 degrees
+            }
+
+            // Convert hash to angle in radians
+            function hashToAngle(hash) {
+                return (hash * Math.PI) / 180;
+            }
+
+            // Convert angle to x,y position
+            function angleToPosition(angle, radius) {
+                return {
+                    x: ringCenter.x + radius * Math.cos(angle - Math.PI / 2),
+                    y: ringCenter.y + radius * Math.sin(angle - Math.PI / 2)
+                };
+            }
+
+            // Initialize data points
+            function initializeDataPoints() {
+                for (let i = 0; i < dataPointCount; i++) {
+                    let dataId = 'D' + (i + 1);
+                    let hash = hashFunction(dataId);
+                    let angle = hashToAngle(hash);
+                    let position = angleToPosition(angle, ringRadius - 70); // Place data points inside the ring
+                    let dataPoint = $('<div class="data-point" data-id="' + dataId + '"></div>');
+                    dataPoint.css({
+                        left: position.x + 'px',
+                        top: position.y + 'px',
+                        transform: 'translate(-50%, -50%)'
+                    });
+                    dataPoint.tooltip({
+                        title: 'Data ' + dataId + '<br>Hash: ' + hash + '°',
+                        html: true,
+                        placement: 'bottom'
+                    });
+                    hashRing.append(dataPoint);
+                    dataPoints.push({ id: dataId, hash: hash, element: dataPoint });
+                }
+            }
+
+            // Redistribute data points to servers
+            function redistributeData() {
+                if (servers.length === 0) {
+                    dataPoints.forEach(data => {
+                        data.element.attr('data-original-title', 'No servers available');
+                        data.element.tooltip('dispose').tooltip({
+                            title: 'No servers available',
+                            placement: 'bottom'
+                        });
+                    });
+                    return;
+                }
+                // Sort servers by hash value
+                servers.sort((a, b) => a.hash - b.hash);
+
+                dataPoints.forEach(data => {
+                    // Find the server responsible for this data point
+                    let assignedServer = null;
+                    for (let i = 0; i < servers.length; i++) {
+                        if (data.hash <= servers[i].hash) {
+                            assignedServer = servers[i];
+                            break;
+                        }
+                    }
+                    // If no server found in the loop, assign to the first server (wrap around the ring)
+                    if (!assignedServer) {
+                        assignedServer = servers[0];
+                    }
+                    // Update tooltip or data attribute
+                    data.element.attr('data-original-title', 'Assigned to ' + assignedServer.id);
+                    data.element.tooltip('dispose').tooltip({
+                        title: 'Assigned to ' + assignedServer.id,
+                        placement: 'bottom'
+                    });
+                });
+            }
+
+            // Reset simulation
+            function resetSimulation() {
+                servers = [];
+                dataPoints = [];
+                serverCount = 0;
+                hashRing.empty();
+                addHashLabels();
+                initializeDataPoints();
+            }
+
+            // Event handlers
+            $('#add-server').click(function() {
+                addServer();
+            });
+
+            $('#remove-server').click(function() {
+                removeServer();
+            });
+
+            $('#reset').click(function() {
+                resetSimulation();
+            });
+
+            // Initialize
+            addHashLabels();
+            initializeDataPoints();
+        });
+
+        // Round Robin Simulation
+        function simulateRoundRobin() {
+            const servers = ['Server 1', 'Server 2', 'Server 3', 'Server 4'];
+            let output = '<ul class="list-group">';
+            for (let i = 1; i <= 8; i++) {
+                const server = servers[(i - 1) % servers.length];
+                output += '<li class="list-group-item">Request ' + i + ' handled by ' + server + '</li>';
+            }
+            output += '</ul>';
+            document.getElementById('roundRobinOutput').innerHTML = output;
+        }
+    </script>
+
+    <!-- Text-to-Speech Script -->
+    <script>
+        $(document).ready(function() {
+            const content = $('#content').text();
+            let utterance;
+            let isPaused = false;
+
+            $('#tts-play').click(function() {
+                if ('speechSynthesis' in window) {
+                    if (isPaused) {
+                        window.speechSynthesis.resume();
+                    } else {
+                        utterance = new SpeechSynthesisUtterance(content);
+                        window.speechSynthesis.cancel();
+                        window.speechSynthesis.speak(utterance);
+                    }
+                    isPaused = false;
+                } else {
+                    alert('Sorry, your browser does not support text-to-speech.');
+                }
+            });
+
+            $('#tts-pause').click(function() {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.pause();
+                    isPaused = true;
+                }
+            });
+
+            $('#tts-stop').click(function() {
+                if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    isPaused = false;
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
