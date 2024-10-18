@@ -16,6 +16,8 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
       rel="stylesheet"
     >
+    <!-- Mermaid.js for UML diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <style>
         body {
             padding: 20px;
@@ -44,9 +46,8 @@
             text-align: center;
             margin: 20px 0;
         }
-        .diagram img {
-            max-width: 100%;
-            height: auto;
+        .diagram .mermaid {
+            margin: 0 auto;
         }
         /* Highlight class for current section */
         .highlight {
@@ -76,6 +77,10 @@
             color: white;
         }
     </style>
+    <!-- Initialize Mermaid.js -->
+    <script>
+        mermaid.initialize({ startOnLoad: true });
+    </script>
 </head>
 <body>
 
@@ -131,7 +136,20 @@
                 The primary purpose of caching in web applications is to enhance performance by storing frequently accessed data in a faster storage medium. This reduces the time it takes to retrieve data, minimizes latency, and decreases the load on backend systems such as databases or external services. By serving data from the cache, applications can respond to user requests more quickly and handle higher traffic efficiently.
             </p>
             <div class="diagram">
-                <img src="https://via.placeholder.com/600x300?text=Primary+Purpose+of+Caching" alt="Primary Purpose of Caching Diagram">
+                <div class="mermaid">
+                sequenceDiagram
+                    participant User
+                    participant Cache
+                    participant Database
+                    User->>Cache: Request Data
+                    alt Data in Cache
+                        Cache-->>User: Return Data
+                    else Cache Miss
+                        Cache->>Database: Fetch Data
+                        Database-->>Cache: Return Data
+                        Cache-->>User: Return Data
+                    end
+                </div>
             </div>
         </div>
 
@@ -149,7 +167,16 @@
                 <li><strong>Testing</strong>: Verify that the domain resolves correctly, and the website or application is accessible and functioning as expected.</li>
             </ol>
             <div class="diagram">
-                <img src="https://via.placeholder.com/600x300?text=Domain+Setup+Process" alt="Domain Setup Process Diagram">
+                <div class="mermaid">
+                sequenceDiagram
+                    participant User
+                    participant DNS
+                    participant WebServer
+                    User->>DNS: Query Domain
+                    DNS-->>User: IP Address
+                    User->>WebServer: HTTP/HTTPS Request
+                    WebServer-->>User: Serve Content
+                </div>
             </div>
         </div>
 
@@ -169,7 +196,17 @@
                 <li><strong>Additional Requests</strong>: The rendered page may trigger additional requests for resources like stylesheets, scripts, and images, repeating the process as needed.</li>
             </ol>
             <div class="diagram">
-                <img src="https://via.placeholder.com/600x300?text=Browser+Access+Sequence" alt="Browser Access Sequence Diagram">
+                <div class="mermaid">
+                sequenceDiagram
+                    participant Browser
+                    participant DNS
+                    participant Server
+                    Browser->>DNS: Resolve google.com
+                    DNS-->>Browser: IP Address
+                    Browser->>Server: HTTP Request
+                    Server-->>Browser: HTML/CSS/JS
+                    Browser->>Browser: Render Page
+                </div>
             </div>
         </div>
 
@@ -198,7 +235,12 @@
                 </li>
             </ul>
             <div class="diagram">
-                <img src="https://via.placeholder.com/600x300?text=L1+vs+L2+Cache+Latency" alt="L1 vs L2 Cache Latency Diagram">
+                <div class="mermaid">
+                graph TD
+                    CPU -->|0.5 ns| L1Cache[L1 Cache]
+                    L1Cache -->|7 ns| L2Cache[L2 Cache]
+                    L2Cache -->|100 ns| RAM[Main Memory]
+                </div>
             </div>
         </div>
 
@@ -221,7 +263,13 @@
                 </li>
             </ul>
             <div class="diagram">
-                <img src="https://via.placeholder.com/600x300?text=Browser+Caching+Mechanisms" alt="Browser Caching Mechanisms Diagram">
+                <div class="mermaid">
+                classDiagram
+                    class Browser {
+                        +HTTPCache
+                        +DNSCache
+                    }
+                </div>
             </div>
         </div>
 
@@ -243,7 +291,11 @@
                 </li>
             </ol>
             <div class="diagram">
-                <img src="https://via.placeholder.com/600x300?text=Practical+Caching+Examples" alt="Practical Caching Examples Diagram">
+                <div class="mermaid">
+                graph LR
+                    User -->|Requests| Cache[RAM Cache (Facebook)]
+                    User -->|Streams| CDN[CDN Servers (Netflix)]
+                </div>
             </div>
         </div>
 
@@ -258,7 +310,14 @@
                 <li><strong>Scalability</strong>: As the user base grows, scaling the caching infrastructure to handle increased load without compromising performance becomes a significant challenge.</li>
             </ul>
             <div class="diagram">
-                <img src="https://via.placeholder.com/600x300?text=Caching+Challenges" alt="Caching Challenges Diagram">
+                <div class="mermaid">
+                flowchart TD
+                    Challenges -->|Data Consistency| ConsistencyIssue[Data Consistency Issue]
+                    Challenges -->|Cache Invalidation| InvalidationIssue[Cache Invalidation Issue]
+                    Challenges -->|Storage Overhead| StorageIssue[Storage Overhead]
+                    Challenges -->|Cache Misses| MissesIssue[Cache Misses]
+                    Challenges -->|Scalability| ScalabilityIssue[Scalability]
+                </div>
             </div>
         </div>
 
@@ -276,7 +335,14 @@
                 Additionally, Facebook uses CacheLib, an open-source caching engine, to build and scale high-performance cache services. CacheLib provides a thread-safe API for high throughput and low overhead, enabling efficient handling of web-scale services.
             </p>
             <div class="diagram">
-                <img src="https://via.placeholder.com/600x300?text=Facebook+Multi-Level+Caching" alt="Facebook Multi-Level Caching Diagram">
+                <div class="mermaid">
+                graph LR
+                    User -->|Request| L1Cache[L1 Cache (TAO)]
+                    L1Cache -->|Miss| L2Cache[L2 Cache (Memcache)]
+                    L2Cache -->|Miss| Database[Database]
+                    L2Cache -->|Data| L1Cache
+                    L1Cache -->|Data| User
+                </div>
             </div>
         </div>
 
@@ -302,7 +368,20 @@
                 </li>
             </ul>
             <div class="diagram">
-                <img src="https://via.placeholder.com/600x300?text=Write-Through+vs+Write-Back" alt="Write-Through vs Write-Back Caching Strategies Diagram">
+                <div class="mermaid">
+                sequenceDiagram
+                    participant User
+                    participant Cache
+                    participant Database
+                    User->>Cache: Write Data
+                    alt Write-Through
+                        Cache->>Database: Write Data
+                        Cache-->>User: Acknowledgement
+                    else Write-Back
+                        Cache-->>User: Acknowledgement
+                        Cache-->>Database: Write Data (Async)
+                    end
+                </div>
             </div>
         </div>
 
@@ -326,7 +405,17 @@
                 <li><strong>Scalability</strong>: Reducing cache misses helps in scaling applications to handle higher loads without compromising performance.</li>
             </ul>
             <div class="diagram">
-                <img src="https://via.placeholder.com/600x300?text=Cache+Miss+Impact" alt="Cache Miss Impact Diagram">
+                <div class="mermaid">
+                sequenceDiagram
+                    participant User
+                    participant Cache
+                    participant Database
+                    User->>Cache: Request Data
+                    Cache-->>User: Cache Miss
+                    Cache->>Database: Fetch Data
+                    Database-->>Cache: Return Data
+                    Cache-->>User: Return Data
+                </div>
             </div>
         </div>
 
@@ -351,7 +440,12 @@
                 </li>
             </ol>
             <div class="diagram">
-                <img src="https://via.placeholder.com/600x300?text=Cache+Eviction+Strategies" alt="Cache Eviction Strategies Diagram">
+                <div class="mermaid">
+                graph TD
+                    EvictionStrategies --> FIFO
+                    EvictionStrategies --> LRU
+                    EvictionStrategies --> LFU
+                </div>
             </div>
         </div>
 
@@ -369,7 +463,12 @@
                 <li><strong>Scalability</strong>: It allows the system to scale performance without exponentially increasing cache sizes, as data is managed across different cache layers.</li>
             </ul>
             <div class="diagram">
-                <img src="https://via.placeholder.com/600x300?text=Hierarchical+Caching" alt="Hierarchical Caching Diagram">
+                <div class="mermaid">
+                graph TD
+                    L1[L1 Cache] --> L2[L2 Cache]
+                    L2 --> L3[L3 Cache]
+                    L3 --> RAM[Main Memory]
+                </div>
             </div>
         </div>
 
@@ -410,7 +509,12 @@
                 Properly implementing these strategies helps maintain data consistency, reducing the risk of serving stale or incorrect data to users.
             </p>
             <div class="diagram">
-                <img src="https://via.placeholder.com/600x300?text=Data+Consistency+Strategies" alt="Data Consistency Strategies Diagram">
+                <div class="mermaid">
+                graph LR
+                    DataSource -- Update --> Cache
+                    Cache -- Invalidate --> OldData[Stale Data]
+                    Cache -- Refresh --> DataSource
+                </div>
             </div>
         </div>
 
@@ -443,7 +547,13 @@
                 </li>
             </ol>
             <div class="diagram">
-                <img src="https://via.placeholder.com/600x300?text=Application+Server+Caching+Types" alt="Application Server Caching Types Diagram">
+                <div class="mermaid">
+                graph LR
+                    InMemory[In-Memory Cache] --> Application
+                    Distributed[Distributed Cache] --> Application
+                    Object[Object Cache] --> Application
+                    DatabaseCache[Database Cache] --> Application
+                </div>
             </div>
         </div>
 
@@ -461,7 +571,15 @@
                 <li><strong>Security Enhancements</strong>: CDNs often incorporate security features like DDoS protection and secure data transmission (HTTPS), safeguarding content from various threats.</li>
             </ul>
             <div class="diagram">
-                <img src="https://via.placeholder.com/600x300?text=CDN+Caching+Effectiveness" alt="CDN Caching Effectiveness Diagram">
+                <div class="mermaid">
+                graph LR
+                    Server -- Push Content --> CDN1[CDN Node 1]
+                    Server -- Push Content --> CDN2[CDN Node 2]
+                    Server -- Push Content --> CDN3[CDN Node 3]
+                    User1 -- Request --> CDN1
+                    User2 -- Request --> CDN2
+                    User3 -- Request --> CDN3
+                </div>
             </div>
         </div>
 
@@ -504,7 +622,15 @@
                 </li>
             </ol>
             <div class="diagram">
-                <img src="https://via.placeholder.com/600x300?text=Cache+Full+Strategies" alt="Cache Full Strategies Diagram">
+                <div class="mermaid">
+                graph LR
+                    CacheFull[Cache Full] -->|Apply| EvictionPolicies
+                    CacheFull -->|Apply| ScaleCache
+                    CacheFull -->|Apply| SelectiveCaching
+                    CacheFull -->|Apply| DataCompression
+                    CacheFull -->|Apply| HierarchicalCaching
+                    CacheFull -->|Apply| SetTTL
+                </div>
             </div>
         </div>
 
@@ -521,7 +647,16 @@
                 <li><strong>Performance Optimization</strong>: Balances between data freshness and cache hit rates, optimizing overall system performance by reducing unnecessary data fetches while keeping data reasonably up-to-date.</li>
             </ul>
             <div class="diagram">
-                <img src="https://via.placeholder.com/600x300?text=Time-to-Live+TTL" alt="Time-to-Live (TTL) Diagram">
+                <div class="mermaid">
+                sequenceDiagram
+                    participant Cache
+                    participant DataSource
+                    Cache->>Cache: Store Data with TTL
+                    Note over Cache: TTL Countdown
+                    Cache-->>Cache: TTL Expires
+                    Cache->>DataSource: Refresh Data
+                    DataSource-->>Cache: Updated Data
+                </div>
             </div>
         </div>
 
@@ -560,7 +695,23 @@
                 </li>
             </ul>
             <div class="diagram">
-                <img src="https://via.placeholder.com/600x300?text=Hierarchical+vs+Global+Caching" alt="Hierarchical vs Global Caching Diagram">
+                <div class="mermaid">
+                graph LR
+                    subgraph Hierarchical Caching
+                        L1Cache1[L1 Cache]
+                        L2Cache1[L2 Cache]
+                        L3Cache1[L3 Cache]
+                        L1Cache1 --> L2Cache1 --> L3Cache1
+                    end
+                    subgraph Global Caching
+                        GeoCache1[Cache Server 1]
+                        GeoCache2[Cache Server 2]
+                        GeoCache3[Cache Server 3]
+                    end
+                    User1 -- Access --> GeoCache1
+                    User2 -- Access --> GeoCache2
+                    User3 -- Access --> GeoCache3
+                </div>
             </div>
         </div>
 
@@ -581,7 +732,14 @@
                 By leveraging CacheLib, Facebook can efficiently build and scale high-performance cache services that meet the demands of its global user base, ensuring quick and reliable access to cached data.
             </p>
             <div class="diagram">
-                <img src="https://via.placeholder.com/600x300?text=CacheLib+Role" alt="CacheLib Role Diagram">
+                <div class="mermaid">
+                graph LR
+                    CacheLib -- Provides --> HighPerformance
+                    CacheLib -- Provides --> Scalability
+                    CacheLib -- Provides --> Flexibility
+                    CacheLib -- Provides --> ThreadSafety
+                    CacheLib -- Provides --> Consistency
+                </div>
             </div>
         </div>
 
@@ -627,7 +785,15 @@
                 Overall, TAO is a critical component of Facebook's backend infrastructure, enabling the platform to deliver personalized content and interactions to users swiftly and reliably by efficiently managing and caching vast amounts of social graph data.
             </p>
             <div class="diagram">
-                <img src="https://via.placeholder.com/600x300?text=TAO+Features" alt="TAO Features Diagram">
+                <div class="mermaid">
+                graph LR
+                    TAO -- Provides --> TwoTieredCaching
+                    TAO -- Provides --> LowLatencyAccess
+                    TAO -- Provides --> Scalability
+                    TAO -- Provides --> DataConsistency
+                    TAO -- Provides --> EfficientDataManagement
+                    TAO -- Provides --> FaultTolerance
+                </div>
             </div>
         </div>
 
