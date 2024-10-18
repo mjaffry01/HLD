@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Introduction to Caching</title>
+</head>
+<body>
+
+    <h1>Introduction to Caching</h1>
+
+    <h2>After Securing a Domain: The Next Steps</h2>
+    <p>Once you have registered a domain, the next step is to make it accessible on the internet. When a user enters your domain into a browser, several processes occur to retrieve the desired resources. The browser needs to resolve the domain name to an IP address, which is essential for locating the server hosting the website.</p>
+
+    <h2>How Browsers Access Internet Resources</h2>
+    <p>When you type a URL, such as google.com, into your browser, the following sequence of events happens:</p>
+    <ol>
+        <li><strong>DNS Lookup:</strong> The browser queries the Domain Name System (DNS) to obtain the IP address associated with the domain name.</li>
+        <li><strong>IP Address Retrieval:</strong> The DNS server responds with the IP address.</li>
+        <li><strong>Resource Access:</strong> The browser uses this IP address to send a request to the server and access the website's resources.</li>
+    </ol>
+
+    <h2>The Role of IP Addresses and Caching</h2>
+    <p>Every time you visit a website like google.com, your browser typically sends multiple requests—often 40 to 50—to load all the necessary resources. Fetching the IP address repeatedly from DNS can slow down the system. To mitigate this, browsers implement caching mechanisms:</p>
+    <ul>
+        <li><strong>IP Address Caching:</strong> By storing the IP address locally, the browser can bypass the DNS lookup on subsequent visits, directly sending requests to the stored IP address. This reduces latency and improves overall performance since the IP address doesn't change frequently and remains relatively static.</li>
+    </ul>
+
+    <h2>Understanding Latency</h2>
+    <p>Latency refers to the delay before a transfer of data begins following an instruction. Here are some latency comparisons to illustrate how different operations impact performance:</p>
+    <ul>
+        <li><strong>Cache References:</strong></li>
+        <ul>
+            <li><strong>L1 Cache:</strong> ~0.5 nanoseconds (ns)</li>
+            <li><strong>L2 Cache:</strong> ~7 ns (14 times slower than L1)</li>
+        </ul>
+        <li><strong>Memory and Network:</strong></li>
+        <ul>
+            <li><strong>Main Memory:</strong> ~100 ns (20 times slower than L2)</li>
+            <li><strong>SSD Access:</strong> ~150,000 ns (150 microseconds)</li>
+            <li><strong>Disk Seek:</strong> ~10,000,000 ns (10 milliseconds)</li>
+            <li><strong>Network Round Trip:</strong> ~150,000,000 ns (150 milliseconds)</li>
+        </ul>
+    </ul>
+    <p>Caching reduces the need to access slower memory or network resources by keeping frequently used data closer to the processor or user, significantly decreasing latency.</p>
+
+    <h2>Practical Examples of Caching</h2>
+    <ul>
+        <li><strong>Facebook Newsfeed:</strong> Facebook caches users' newsfeeds in RAM to quickly deliver personalized content within seconds. This ensures that even with millions of users, the system remains responsive by avoiding repeated database queries.</li>
+        <li><strong>Netflix Streaming:</strong> Netflix employs Content Delivery Networks (CDNs) to cache movie data closer to users. By partnering with Internet Service Providers (ISPs), Netflix stores copies of its content on servers geographically near users, reducing load times and improving streaming quality.</li>
+        <li><strong>Twitter High-Traffic Posts:</strong> For popular users like Virat Kohli, Twitter caches their posts to handle high traffic efficiently. This ensures that when many users request the same content, the system can deliver it quickly without overloading the servers.</li>
+    </ul>
+
+    <h2>Content Delivery Networks (CDNs)</h2>
+    <p>CDNs store copies of data, such as images and videos, in multiple geographical locations. This proximity to users decreases latency and improves load times. However, maintaining data consistency across all CDN nodes can be challenging, especially when the original data changes frequently.</p>
+
+    <h2>Types of Caching</h2>
+    <ul>
+        <li><strong>Browser Caching:</strong> Browsers store IP addresses and other frequently accessed data locally to speed up subsequent requests. This reduces the need for repeated DNS lookups and accelerates page load times.</li>
+        <li><strong>Content Delivery Network (CDN) Caching:</strong> CDNs cache content at various locations around the world, ensuring that users receive data from the nearest server. This approach enhances performance and reduces the load on the origin server.</li>
+        <li><strong>Application Server Caching:</strong> Applications can cache data at the server level to minimize database queries. For example, a leaderboard service might cache user rankings to handle thousands of requests per second without slowing down.</li>
+        <li><strong>Global Caching:</strong> Global caches store data across multiple regions and data centers, ensuring that users worldwide can access information quickly. This type of caching is crucial for applications with a global user base.</li>
+        <li><strong>Mobile Caching:</strong> Mobile caching involves storing data on separate machines dedicated to handling mobile requests. This ensures that mobile users experience fast and reliable access to content, such as news feeds.</li>
+    </ul>
+
+    <h2>Challenges with Caching</h2>
+    <ul>
+        <li><strong>Data Consistency:</strong> When the original data changes, all cached copies must be updated to prevent serving outdated information. This synchronization can be complex, especially across multiple caching layers and geographical locations.</li>
+        <li><strong>Storage Overhead:</strong> Caching requires additional storage resources to keep copies of data, which can increase costs and infrastructure complexity.</li>
+    </ul>
+
+    <h2>Conclusion</h2>
+    <p>Caching is a fundamental technique used to enhance performance and reduce latency by storing copies of frequently accessed data closer to the user or processor. Implemented at various levels—browsers, CDNs, application servers, and globally—caching ensures efficient data retrieval and a seamless user experience. Despite its challenges, effective caching strategies are essential for scalable and high-performance internet services.</p>
+
+</body>
+</html>
