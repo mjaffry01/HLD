@@ -3,565 +3,786 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Introduction to Caching - Lecture Notes</title>
+    <title>Lecture Notes: Introduction to Caching</title>
+    <!-- Bootstrap CSS for styling -->
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-M2VMdX1JZ3K8Ht1hEeA8PTP1OWxP6lF6LVH9KvH3VdASUeP5XkX6V2z0E6yG9h1e"
+      crossorigin="anonymous"
+    >
+    <!-- Font Awesome for icons -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+      rel="stylesheet"
+    >
     <style>
         body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 20px;
-            padding: 0;
-            background-color: #f4f4f4;
+            padding: 20px;
+            background-color: #f8f9fa;
         }
-        header, footer {
-            text-align: center;
-            padding: 10px 0;
-            background-color: #333;
-            color: #fff;
-            margin-bottom: 20px;
+        .section-title {
+            color: #343a40;
+            margin-top: 40px;
         }
-        main {
-            background-color: #fff;
+        .question-list a {
+            text-decoration: none;
+            color: #007bff;
+        }
+        .question-list a:hover {
+            text-decoration: underline;
+        }
+        .summary {
+            background-color: #e9ecef;
             padding: 20px;
             border-radius: 5px;
         }
-        h1, h2, h3 {
-            color: #333;
+        .btn-controls {
+            margin: 20px 0;
         }
-        button {
-            padding: 10px 20px;
-            margin: 10px 5px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        #controls {
+        .diagram {
             text-align: center;
-            margin-bottom: 20px;
+            margin: 20px 0;
         }
-        #readButton { background-color: #28a745; color: #fff; }
-        #pauseButton { background-color: #ffc107; color: #fff; }
-        #stopButton { background-color: #dc3545; color: #fff; }
-        a { color: #007bff; text-decoration: none; }
-        a:hover { text-decoration: underline; }
+        .diagram img {
+            max-width: 100%;
+            height: auto;
+        }
+        /* Highlight class for current section */
+        .highlight {
+            background-color: #ffff99; /* Light yellow background */
+            transition: background-color 0.5s ease;
+        }
+        /* Floating Back to Questions Button */
+        .floating-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+        }
+        .floating-button a {
+            display: inline-block;
+            padding: 15px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background-color 0.3s;
+        }
+        .floating-button a:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+            color: white;
+        }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Introduction to Caching</h1>
-    </header>
+    <!-- Read, Pause, Stop Buttons -->
+    <div class="btn-controls text-center">
+        <button id="readBtn" class="btn btn-primary"><i class="fas fa-play"></i> Read</button>
+        <button id="pauseBtn" class="btn btn-warning"><i class="fas fa-pause"></i> Pause</button>
+        <button id="stopBtn" class="btn btn-danger"><i class="fas fa-stop"></i> Stop</button>
+    </div>
 
-    <main>
-        <div id="controls">
-            <button id="readButton">Read</button>
-            <button id="pauseButton">Pause</button>
-            <button id="stopButton">Stop</button>
+    <!-- Review Questions -->
+    <div class="section" id="review-questions">
+        <h2 class="section-title"><i class="fas fa-question-circle"></i> Review Questions</h2>
+        <ol class="question-list">
+            <li><a href="#question1">What is the primary purpose of caching in web applications?</a></li>
+            <li><a href="#question2">Explain the process that occurs after securing a domain to make it accessible on the internet.</a></li>
+            <li><a href="#question3">Describe the sequence of events when a browser accesses a URL like <code>google.com</code>.</a></li>
+            <li><a href="#question4">Explain the difference between L1 and L2 cache in terms of latency.</a></li>
+            <li><a href="#question5">Name and describe two types of caching mechanisms used by browsers.</a></li>
+            <li><a href="#question6">Provide two practical examples of how large platforms like Facebook and Netflix utilize caching.</a></li>
+            <li><a href="#question7">What are the main challenges associated with caching?</a></li>
+            <li><a href="#question8">Describe how Facebook utilizes multi-level caching in its infrastructure.</a></li>
+            <li><a href="#question9">Compare and contrast write-through and write-back caching strategies.</a></li>
+            <li><a href="#question10">What is a cache miss, and why is it important to minimize cache misses?</a></li>
+            <li><a href="#question11">List and briefly explain three cache eviction strategies.</a></li>
+            <li><a href="#question12">How does hierarchical caching optimize storage and performance?</a></li>
+            <li><a href="#question13">Why is data consistency a critical issue in caching systems, and how can it be maintained?</a></li>
+            <li><a href="#question14">What are the different types of application server caching and their benefits?</a></li>
+            <li><a href="#question15">How do Content Delivery Networks (CDNs) enhance caching effectiveness?</a></li>
+            <li><a href="#question16">What strategies can be employed to handle situations when the cache becomes full?</a></li>
+            <li><a href="#question17">Explain the concept of Time-to-Live (TTL) in caching and its significance.</a></li>
+            <li><a href="#question18">How does hierarchical caching differ from global caching?</a></li>
+            <li><a href="#question19">What role does CacheLib play in Facebook’s caching infrastructure?</a></li>
+            <li><a href="#question20">Describe the features and benefits of TAO (The Associations and Objects) in Facebook’s caching system.</a></li>
+        </ol>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary">
+        <h2 class="section-title"><i class="fas fa-info-circle"></i> Summary</h2>
+        <p>
+            Caching is a fundamental technique used to enhance the performance and efficiency of web applications by temporarily storing frequently accessed data closer to the user or processor. This reduces latency, minimizes database load, and ensures faster data retrieval. Caching mechanisms operate at various levels, including browsers, Content Delivery Networks (CDNs), and application servers. Effective caching strategies are essential for maintaining data consistency, managing storage overhead, and ensuring scalability in high-traffic environments. This lecture explores the intricacies of caching, its types, practical applications, challenges, and strategies to maintain synchronization between caches and databases.
+        </p>
+    </div>
+
+    <!-- Lecture Notes -->
+    <div class="lecture-notes">
+
+        <!-- Question 1 -->
+        <div id="question1">
+            <h2 class="section-title"><i class="fas fa-lightbulb"></i> What is the primary purpose of caching in web applications?</h2>
+            <p>
+                The primary purpose of caching in web applications is to enhance performance by storing frequently accessed data in a faster storage medium. This reduces the time it takes to retrieve data, minimizes latency, and decreases the load on backend systems such as databases or external services. By serving data from the cache, applications can respond to user requests more quickly and handle higher traffic efficiently.
+            </p>
+            <div class="diagram">
+                <img src="https://via.placeholder.com/600x300?text=Primary+Purpose+of+Caching" alt="Primary Purpose of Caching Diagram">
+            </div>
         </div>
 
-        <section>
-            <h2>After Securing a Domain: The Next Steps</h2>
-            <p>Once you've registered a domain name, the journey to making your website accessible to the public begins. The primary goal is to ensure that when users enter your domain into their browsers, they can retrieve the desired resources seamlessly. This process involves resolving the domain name to an IP address, which is crucial for locating the server that hosts your website.</p>
-        </section>
-
-        <hr>
-
-        <section>
-            <h2>How Browsers Access Internet Resources</h2>
-            <p>When a user types a URL like <code>google.com</code> into a browser, a sequence of events is triggered:</p>
+        <!-- Question 2 -->
+        <div id="question2">
+            <h2 class="section-title"><i class="fas fa-lock"></i> Explain the process that occurs after securing a domain to make it accessible on the internet.</h2>
+            <p>
+                After securing a domain, the following steps occur to make it accessible on the internet:
+            </p>
             <ol>
-                <li><strong>DNS Lookup</strong>: The browser initiates a query to the Domain Name System (DNS) to find the IP address associated with the domain name.</li>
-                <li><strong>IP Address Retrieval</strong>: The DNS server responds with the corresponding IP address.</li>
-                <li><strong>Resource Access</strong>: Using this IP address, the browser sends a request to the server to retrieve the website's resources.</li>
+                <li><strong>DNS Configuration</strong>: Set up DNS records (A, CNAME, MX, etc.) to point the domain to the server's IP address.</li>
+                <li><strong>Server Setup</strong>: Configure the web server (e.g., Apache, Nginx) to handle requests for the domain.</li>
+                <li><strong>SSL Certificate Installation</strong>: Install an SSL certificate to enable HTTPS, ensuring secure data transmission.</li>
+                <li><strong>Content Deployment</strong>: Upload website content, applications, or services to the server.</li>
+                <li><strong>Testing</strong>: Verify that the domain resolves correctly, and the website or application is accessible and functioning as expected.</li>
             </ol>
-            <p>This process is essential for translating human-readable domain names into machine-understandable IP addresses, enabling communication over the internet.</p>
-        </section>
+            <div class="diagram">
+                <img src="https://via.placeholder.com/600x300?text=Domain+Setup+Process" alt="Domain Setup Process Diagram">
+            </div>
+        </div>
 
-        <hr>
+        <!-- Question 3 -->
+        <div id="question3">
+            <h2 class="section-title"><i class="fas fa-globe"></i> Describe the sequence of events when a browser accesses a URL like <code>google.com</code>.</h2>
+            <p>
+                When a browser accesses a URL like <code>google.com</code>, the following sequence of events occurs:
+            </p>
+            <ol>
+                <li><strong>DNS Lookup</strong>: The browser checks its DNS cache to find the IP address associated with <code>google.com</code>. If not found, it queries a DNS server.</li>
+                <li><strong>IP Address Retrieval</strong>: The DNS server responds with the IP address of the server hosting <code>google.com</code>.</li>
+                <li><strong>Establishing Connection</strong>: The browser initiates a TCP connection to the server's IP address, typically on port 80 (HTTP) or 443 (HTTPS).</li>
+                <li><strong>Sending HTTP Request</strong>: The browser sends an HTTP request to the server, asking for the specific resource (e.g., homepage).</li>
+                <li><strong>Server Response</strong>: The server processes the request and sends back the requested data, such as HTML, CSS, JavaScript, and images.</li>
+                <li><strong>Rendering</strong>: The browser parses the received data and renders the webpage for the user to view.</li>
+                <li><strong>Additional Requests</strong>: The rendered page may trigger additional requests for resources like stylesheets, scripts, and images, repeating the process as needed.</li>
+            </ol>
+            <div class="diagram">
+                <img src="https://via.placeholder.com/600x300?text=Browser+Access+Sequence" alt="Browser Access Sequence Diagram">
+            </div>
+        </div>
 
-        <section>
-            <h2>The Role of IP Addresses and Caching</h2>
-            <p>Visiting a modern website often requires the browser to send multiple requests—sometimes dozens—to load all necessary resources like HTML files, images, CSS stylesheets, and JavaScript files. Repeatedly fetching the IP address from DNS for each request can introduce significant delays.</p>
-            <p>To optimize this process, browsers implement caching mechanisms:</p>
+        <!-- Question 4 -->
+        <div id="question4">
+            <h2 class="section-title"><i class="fas fa-clock"></i> Explain the difference between L1 and L2 cache in terms of latency.</h2>
+            <p>
+                L1 and L2 caches are levels of CPU cache memory that store frequently accessed data to speed up processing. The key differences in terms of latency are:
+            </p>
             <ul>
-                <li><strong>IP Address Caching</strong>: Browsers store the IP address of a domain locally after the first DNS lookup. Subsequent requests can bypass the DNS query and directly use the cached IP address, reducing latency and improving load times. Since IP addresses typically remain static for a period, this cache is both practical and efficient.</li>
-            </ul>
-        </section>
-
-        <hr>
-
-        <section>
-            <h2>Understanding Latency</h2>
-            <p>Latency refers to the time delay between a request and the initiation of a response. It's a critical factor in system performance, especially in networking and data retrieval. The following comparisons illustrate how different operations impact latency:</p>
-            <ul>
-                <li><strong>Cache References</strong>:
+                <li><strong>L1 Cache</strong>:
                     <ul>
-                        <li><strong>L1 Cache</strong>: ~0.5 nanoseconds (ns)</li>
-                        <li><strong>L2 Cache</strong>: ~7 ns (14 times slower than L1)</li>
+                        <li>Located closest to the CPU cores.</li>
+                        <li>Smaller in size (typically 16KB to 64KB per core).</li>
+                        <li>Extremely low latency (~0.5 nanoseconds).</li>
+                        <li>Used for storing the most frequently accessed data and instructions.</li>
                     </ul>
                 </li>
-                <li><strong>Memory and Storage</strong>:
+                <li><strong>L2 Cache</strong>:
                     <ul>
-                        <li><strong>Main Memory (RAM)</strong>: ~100 ns (20 times slower than L2)</li>
-                        <li><strong>Solid-State Drive (SSD) Access</strong>: ~150,000 ns (150 microseconds)</li>
-                        <li><strong>Disk Seek (Hard Drive)</strong>: ~10,000,000 ns (10 milliseconds)</li>
-                    </ul>
-                </li>
-                <li><strong>Network Operations</strong>:
-                    <ul>
-                        <li><strong>Network Round Trip (e.g., over the internet)</strong>: ~150,000,000 ns (150 milliseconds)</li>
-                    </ul>
-                </li>
-            </ul>
-            <p>These figures highlight the importance of caching; accessing data from a cache is exponentially faster than retrieving it from main memory, disk storage, or over a network.</p>
-        </section>
-
-        <hr>
-
-        <section>
-            <h2>Practical Examples of Caching</h2>
-
-            <h3>1. Facebook Newsfeed</h3>
-            <ul>
-                <li><strong>Challenge</strong>: Delivering personalized newsfeeds to millions of users in real-time.</li>
-                <li><strong>Solution</strong>: Facebook caches users' newsfeeds in RAM, allowing quick access and reducing the need for repetitive database queries.</li>
-                <li><strong>Benefit</strong>: Ensures a responsive user experience by minimizing latency and server load.</li>
-            </ul>
-
-            <h3>2. Netflix Streaming</h3>
-            <ul>
-                <li><strong>Challenge</strong>: Providing high-quality video streaming to a global audience.</li>
-                <li><strong>Solution</strong>: Netflix uses Content Delivery Networks (CDNs) to cache video content on servers geographically closer to users.</li>
-                <li><strong>Benefit</strong>: Reduces buffering times and improves streaming quality by minimizing the distance data must travel.</li>
-            </ul>
-
-            <h3>3. Twitter High-Traffic Posts</h3>
-            <ul>
-                <li><strong>Challenge</strong>: Handling massive traffic spikes when popular users post new content.</li>
-                <li><strong>Solution</strong>: Twitter caches tweets from high-profile users to efficiently serve a large number of requests.</li>
-                <li><strong>Benefit</strong>: Prevents server overload and maintains fast content delivery during peak times.</li>
-            </ul>
-
-            <h3>4. Content Delivery Networks (CDNs)</h3>
-            <ul>
-                <li><strong>Challenge</strong>: Delivering static content (images, scripts, videos) quickly to users worldwide.</li>
-                <li><strong>Solution</strong>: CDNs cache copies of content in multiple geographic locations.</li>
-                <li><strong>Benefit</strong>: Decreases latency by serving content from the nearest server to the user.</li>
-            </ul>
-        </section>
-
-        <hr>
-
-        <section>
-            <h2>Types of Caching</h2>
-
-            <h3>1. Browser Caching</h3>
-            <ul>
-                <li><strong>Description</strong>: Browsers store static resources (like images, CSS files, and JavaScript files) and DNS lookups locally.</li>
-                <li><strong>Benefit</strong>: Speeds up page load times on subsequent visits by avoiding unnecessary network requests.</li>
-            </ul>
-
-            <h3>2. Content Delivery Network (CDN) Caching</h3>
-            <ul>
-                <li><strong>Description</strong>: CDNs cache content on servers around the world.</li>
-                <li><strong>Benefit</strong>: Reduces latency and server load by delivering content from the closest geographic location to the user.</li>
-            </ul>
-
-            <h3>3. Application Server Caching</h3>
-            <ul>
-                <li><strong>Description</strong>: Servers cache frequently accessed data in memory.</li>
-                <li><strong>Benefit</strong>: Minimizes database queries, reduces latency, and speeds up response times for dynamic content.</li>
-            </ul>
-
-            <h3>4. Global Caching</h3>
-            <ul>
-                <li><strong>Description</strong>: Data is cached across multiple regions and data centers.</li>
-                <li><strong>Benefit</strong>: Ensures quick data access for a global user base and provides redundancy.</li>
-            </ul>
-
-            <h3>5. Mobile Caching</h3>
-            <ul>
-                <li><strong>Description</strong>: Dedicated caching for mobile users, often on separate servers optimized for mobile traffic.</li>
-                <li><strong>Benefit</strong>: Enhances performance and reliability for mobile applications, which may have different requirements than desktop applications.</li>
-            </ul>
-        </section>
-
-        <hr>
-
-        <section>
-            <h2>Challenges with Caching</h2>
-
-            <h3>1. Data Consistency</h3>
-            <ul>
-                <li><strong>Issue</strong>: When the original data changes, cached copies may become outdated.</li>
-                <li><strong>Solution</strong>:
-                    <ul>
-                        <li><strong>Cache Invalidation</strong>: Implement strategies to invalidate or update cached data when the source data changes.</li>
-                        <li><strong>Time-to-Live (TTL)</strong>: Set expiration times for cached data to ensure regular updates.</li>
-                        <li><strong>Event-Driven Updates</strong>: Push changes to cache when data is updated at the source.</li>
+                        <li>Located between the CPU cores and the main memory.</li>
+                        <li>Larger in size (typically 256KB to 1MB per core).</li>
+                        <li>Higher latency (~7 nanoseconds) compared to L1 cache.</li>
+                        <li>Stores data that is less frequently accessed than what is stored in L1 cache.</li>
                     </ul>
                 </li>
             </ul>
+            <div class="diagram">
+                <img src="https://via.placeholder.com/600x300?text=L1+vs+L2+Cache+Latency" alt="L1 vs L2 Cache Latency Diagram">
+            </div>
+        </div>
 
-            <h3>2. Storage Overhead</h3>
+        <!-- Question 5 -->
+        <div id="question5">
+            <h2 class="section-title"><i class="fas fa-network-wired"></i> Name and describe two types of caching mechanisms used by browsers.</h2>
+            <p>
+                Browsers utilize several caching mechanisms to improve performance by reducing the need to fetch resources repeatedly from the server. Two primary types are:
+            </p>
             <ul>
-                <li><strong>Issue</strong>: Caching requires additional storage resources, which can increase costs and complexity.</li>
-                <li><strong>Solution</strong>:
+                <li><strong>HTTP Cache</strong>:
+                    <p>
+                        Stores responses to HTTP requests (like HTML pages, images, CSS, JavaScript) based on caching headers (e.g., <code>Cache-Control</code>, <code>Expires</code>). When the same resource is requested again, the browser can serve it from the cache instead of fetching it from the network, reducing load times.
+                    </p>
+                </li>
+                <li><strong>DNS Cache</strong>:
+                    <p>
+                        Caches the mapping of domain names to IP addresses. By storing DNS query results, the browser can quickly resolve domain names without performing a new DNS lookup each time, thereby decreasing latency and speeding up access to websites.
+                    </p>
+                </li>
+            </ul>
+            <div class="diagram">
+                <img src="https://via.placeholder.com/600x300?text=Browser+Caching+Mechanisms" alt="Browser Caching Mechanisms Diagram">
+            </div>
+        </div>
+
+        <!-- Question 6 -->
+        <div id="question6">
+            <h2 class="section-title"><i class="fas fa-facebook"></i> Provide two practical examples of how large platforms like Facebook and Netflix utilize caching.</h2>
+            <ol>
+                <li><strong>Facebook Newsfeed</strong>
+                    <p>
+                        Facebook caches users' newsfeeds in RAM to deliver personalized content quickly. By storing frequently accessed data in memory, Facebook can serve newsfeeds without repeatedly querying the database, ensuring fast load times even with millions of users.
+                    </p>
+                    <img src="https://source.unsplash.com/600x300/?facebook" alt="Facebook Newsfeed" class="img-fluid mb-3">
+                </li>
+                <li><strong>Netflix Streaming</strong>
+                    <p>
+                        Netflix employs Content Delivery Networks (CDNs) to cache movie and TV show data closer to users. By distributing cached content across geographically dispersed servers, Netflix reduces load times and enhances streaming quality, providing a seamless viewing experience.
+                    </p>
+                    <img src="https://source.unsplash.com/600x300/?netflix" alt="Netflix Streaming" class="img-fluid mb-3">
+                </li>
+            </ol>
+            <div class="diagram">
+                <img src="https://via.placeholder.com/600x300?text=Practical+Caching+Examples" alt="Practical Caching Examples Diagram">
+            </div>
+        </div>
+
+        <!-- Question 7 -->
+        <div id="question7">
+            <h2 class="section-title"><i class="fas fa-exclamation-triangle"></i> What are the main challenges associated with caching?</h2>
+            <ul>
+                <li><strong>Data Consistency</strong>: Ensuring that cached data remains synchronized with the original data source can be complex, especially across multiple caching layers and geographical locations. Inconsistencies can lead to outdated or incorrect data being served to users.</li>
+                <li><strong>Cache Invalidation</strong>: Determining when to update or remove cached data is challenging. Improper invalidation strategies can result in stale data or unnecessary cache misses.</li>
+                <li><strong>Storage Overhead</strong>: Caching requires additional storage resources, which can increase costs and infrastructure complexity. Managing cache size and ensuring efficient use of storage is essential.</li>
+                <li><strong>Cache Misses</strong>: When requested data is not found in the cache, it leads to cache misses, resulting in slower data retrieval from the original source. Minimizing cache misses is crucial for maintaining performance.</li>
+                <li><strong>Scalability</strong>: As the user base grows, scaling the caching infrastructure to handle increased load without compromising performance becomes a significant challenge.</li>
+            </ul>
+            <div class="diagram">
+                <img src="https://via.placeholder.com/600x300?text=Caching+Challenges" alt="Caching Challenges Diagram">
+            </div>
+        </div>
+
+        <!-- Question 8 -->
+        <div id="question8">
+            <h2 class="section-title"><i class="fas fa-network-wired"></i> Describe how Facebook utilizes multi-level caching in its infrastructure.</h2>
+            <p>
+                Facebook employs a sophisticated multi-level caching strategy to enhance performance and scalability. The caching system includes:
+            </p>
+            <ol>
+                <li><strong>L1 Cache</strong>: Managed by TAO clients, L1 cache is the first layer of caching. It stores frequently accessed data close to the application servers, ensuring quick data retrieval.</li>
+                <li><strong>L2 Cache</strong>: Managed by Memcache, L2 cache is a distributed caching system that handles a larger volume of data. It serves as a secondary cache layer, reducing the load on the primary data stores by serving cached data to multiple application servers.</li>
+            </ol>
+            <p>
+                Additionally, Facebook uses CacheLib, an open-source caching engine, to build and scale high-performance cache services. CacheLib provides a thread-safe API for high throughput and low overhead, enabling efficient handling of web-scale services.
+            </p>
+            <div class="diagram">
+                <img src="https://via.placeholder.com/600x300?text=Facebook+Multi-Level+Caching" alt="Facebook Multi-Level Caching Diagram">
+            </div>
+        </div>
+
+        <!-- Question 9 -->
+        <div id="question9">
+            <h2 class="section-title"><i class="fas fa-pencil-alt"></i> Compare and contrast write-through and write-back caching strategies.</h2>
+            <ul>
+                <li><strong>Write-Through Cache</strong>
                     <ul>
-                        <li><strong>Selective Caching</strong>: Cache only the most frequently accessed data.</li>
-                        <li><strong>Compression</strong>: Use data compression to reduce the storage footprint.</li>
-                        <li><strong>Hierarchical Caching</strong>: Implement multi-level caching systems (e.g., L1, L2, L3 caches) to optimize storage and access speeds.</li>
+                        <li><strong>Process</strong>: Data is written to both the cache and the database simultaneously.</li>
+                        <li><strong>Pros</strong>: Ensures that the cache always has the latest data, maintaining consistency between the cache and the database.</li>
+                        <li><strong>Cons</strong>: Slower write operations due to the need to write data to both cache and database.</li>
+                        <li><strong>Use Case</strong>: Applications with high read and low write operations where data consistency is critical.</li>
+                    </ul>
+                </li>
+                <li><strong>Write-Back (Write-Behind) Cache</strong>
+                    <ul>
+                        <li><strong>Process</strong>: Data is written to the cache first and then asynchronously written to the database at a later time.</li>
+                        <li><strong>Pros</strong>: Faster write operations as data is initially written only to the cache.</li>
+                        <li><strong>Cons</strong>: Potential data loss if the cache fails before data is written to the database, leading to inconsistencies.</li>
+                        <li><strong>Use Case</strong>: Systems where occasional data loss is acceptable, such as analytical systems or applications where write operations are frequent and performance is a priority.</li>
                     </ul>
                 </li>
             </ul>
-        </section>
+            <div class="diagram">
+                <img src="https://via.placeholder.com/600x300?text=Write-Through+vs+Write-Back" alt="Write-Through vs Write-Back Caching Strategies Diagram">
+            </div>
+        </div>
 
-        <hr>
-
-        <section>
-            <h2>Conclusion</h2>
-            <p>Caching is an essential strategy for optimizing performance in modern computing and web services. By storing frequently accessed data closer to the user or processor, caching significantly reduces latency and improves the user experience. While it introduces challenges like data consistency and storage management, effective caching strategies are vital for building scalable and high-performance applications.</p>
-        </section>
-
-        <hr>
-
-        <section>
-            <h2>In-Depth Look at Application Server Caching</h2>
-
-            <h3>How Application Server Caching Works</h3>
-
-            <h4>Data Storage</h4>
+        <!-- Question 10 -->
+        <div id="question10">
+            <h2 class="section-title"><i class="fas fa-search"></i> What is a cache miss, and why is it important to minimize cache misses?</h2>
+            <p>
+                A <strong>cache miss</strong> occurs when the requested data is not found in the cache, forcing the system to retrieve the data from a slower storage layer, such as the main memory or disk. There are three types of cache misses:
+            </p>
+            <ol>
+                <li><strong>Compulsory Miss</strong>: Occurs when data is accessed for the first time and is not present in the cache.</li>
+                <li><strong>Capacity Miss</strong>: Happens when the cache is too small to hold all the data needed, causing older data to be evicted and later accessed again.</li>
+                <li><strong>Conflict Miss</strong>: Arises in set-associative or direct-mapped caches when multiple data blocks compete for the same cache line.</li>
+            </ol>
+            <p>
+                Minimizing cache misses is crucial because:
+            </p>
             <ul>
-                <li><strong>In-Memory Storage</strong>: Frequently requested data is stored in the server's RAM for rapid access.</li>
-                <li><strong>Types of Data Cached</strong>: Database query results, session data, user profiles, and other frequently accessed objects.</li>
+                <li><strong>Performance</strong>: Cache misses lead to longer data retrieval times, which can degrade application performance and user experience.</li>
+                <li><strong>Resource Utilization</strong>: Frequent cache misses increase the load on backend systems like databases, potentially causing bottlenecks and reducing overall system efficiency.</li>
+                <li><strong>Scalability</strong>: Reducing cache misses helps in scaling applications to handle higher loads without compromising performance.</li>
             </ul>
+            <div class="diagram">
+                <img src="https://via.placeholder.com/600x300?text=Cache+Miss+Impact" alt="Cache Miss Impact Diagram">
+            </div>
+        </div>
 
-            <h4>Data Retrieval</h4>
+        <!-- Question 11 -->
+        <div id="question11">
+            <h2 class="section-title"><i class="fas fa-trash-alt"></i> List and briefly explain three cache eviction strategies.</h2>
+            <ol>
+                <li><strong>FIFO (First-In, First-Out)</strong>
+                    <p>
+                        Removes the oldest cached items first, regardless of how frequently or recently they were accessed. Simple to implement but may remove items that are still frequently used.
+                    </p>
+                </li>
+                <li><strong>LRU (Least Recently Used)</strong>
+                    <p>
+                        Removes the least recently accessed items. Assumes that items not used recently are less likely to be used in the future. More efficient in minimizing cache misses compared to FIFO.
+                    </p>
+                </li>
+                <li><strong>LFU (Least Frequently Used)</strong>
+                    <p>
+                        Removes items that are accessed least frequently over time. Tracks the number of times each item is accessed and evicts those with the lowest access counts.
+                    </p>
+                </li>
+            </ol>
+            <div class="diagram">
+                <img src="https://via.placeholder.com/600x300?text=Cache+Eviction+Strategies" alt="Cache Eviction Strategies Diagram">
+            </div>
+        </div>
+
+        <!-- Question 12 -->
+        <div id="question12">
+            <h2 class="section-title"><i class="fas fa-layer-group"></i> How does hierarchical caching optimize storage and performance?</h2>
+            <p>
+                Hierarchical caching involves using multiple levels of caches, each with different storage capacities and access speeds, to optimize both storage utilization and performance. Here's how it works:
+            </p>
             <ul>
-                <li><strong>Cache Hit</strong>: If the requested data is found in the cache, it's returned immediately to the user.</li>
-                <li><strong>Cache Miss</strong>: If the data isn't in the cache, the server retrieves it from the database or persistent storage, stores it in the cache, and then serves it to the user.</li>
+                <li><strong>Multiple Cache Levels</strong>: Typically, there are several cache levels (e.g., L1, L2, L3), each closer to the CPU or user and varying in size and speed.</li>
+                <li><strong>Data Placement</strong>: Frequently accessed data is stored in the faster, smaller caches (e.g., L1), while less frequently accessed data is stored in larger, slower caches (e.g., L2 or L3).</li>
+                <li><strong>Reduced Latency</strong>: By having data available at multiple cache levels, the system can retrieve it from the closest and fastest cache, minimizing access time.</li>
+                <li><strong>Efficient Storage Use</strong>: Hierarchical caching ensures that storage resources are utilized efficiently by distributing data based on access patterns and frequency.</li>
+                <li><strong>Scalability</strong>: It allows the system to scale performance without exponentially increasing cache sizes, as data is managed across different cache layers.</li>
             </ul>
+            <div class="diagram">
+                <img src="https://via.placeholder.com/600x300?text=Hierarchical+Caching" alt="Hierarchical Caching Diagram">
+            </div>
+        </div>
 
-            <h4>Cache Management</h4>
+        <!-- Question 13 -->
+        <div id="question13">
+            <h2 class="section-title"><i class="fas fa-sync-alt"></i> Why is data consistency a critical issue in caching systems, and how can it be maintained?</h2>
+            <p>
+                <strong>Data Consistency</strong> ensures that cached data remains synchronized with the original data source. It is critical because inconsistencies can lead to outdated or incorrect information being served to users, undermining the reliability and integrity of applications.
+            </p>
+            <p>
+                Maintaining data consistency in caching systems involves several strategies:
+            </p>
             <ul>
-                <li><strong>Eviction Policies</strong>:
+                <li><strong>Cache Invalidation</strong>:
+                    <p>
+                        Mechanisms to invalidate or update cache entries when the underlying data changes. Common approaches include:
+                    </p>
                     <ul>
-                        <li><strong>Least Recently Used (LRU)</strong>: Removes the least recently accessed items when the cache is full.</li>
-                        <li><strong>Time-to-Live (TTL)</strong>: Sets an expiration time for cached items, after which they are invalidated.</li>
+                        <li><strong>Time-to-Live (TTL)</strong>: Sets an expiration time for cached data, after which it is considered stale and refreshed.</li>
+                        <li><strong>Event-Based Invalidation</strong>: Triggers cache updates or invalidations based on specific events or changes in the data source.</li>
                     </ul>
                 </li>
-                <li><strong>Cache Invalidation</strong>: Ensures that stale data is removed or updated when the underlying data changes.</li>
-            </ul>
-
-            <h3>Types of Application Server Caching</h3>
-
-            <h4>1. In-Memory Caching</h4>
-            <ul>
-                <li><strong>Description</strong>: Data is stored in the server's RAM.</li>
-                <li><strong>Use Cases</strong>: Session data, user authentication tokens, frequently accessed configurations.</li>
-            </ul>
-
-            <h4>2. Distributed Caching</h4>
-            <ul>
-                <li><strong>Description</strong>: Cache is spread across multiple servers or nodes.</li>
-                <li><strong>Use Cases</strong>: Large-scale applications requiring high availability and scalability.</li>
-            </ul>
-
-            <h4>3. Object Caching</h4>
-            <ul>
-                <li><strong>Description</strong>: Specific objects or data structures are cached to avoid repetitive computations or database access.</li>
-                <li><strong>Use Cases</strong>: Complex computations, serialized objects, API responses.</li>
-            </ul>
-
-            <h4>4. Database Caching</h4>
-            <ul>
-                <li><strong>Description</strong>: Results from database queries are cached.</li>
-                <li><strong>Use Cases</strong>: Read-heavy applications where certain queries are executed frequently.</li>
-            </ul>
-
-            <h3>Benefits of Application Server Caching</h3>
-            <ul>
-                <li><strong>Improved Performance</strong>: Faster data retrieval from memory compared to disk or network storage.</li>
-                <li><strong>Reduced Latency</strong>: Minimizes response times, enhancing the user experience.</li>
-                <li><strong>Lower Database Load</strong>: Decreases the number of direct database queries, reducing server strain.</li>
-                <li><strong>Scalability</strong>: Enables the application to handle more concurrent users by offloading work from backend services.</li>
-            </ul>
-
-            <h3>Examples of Application Server Caching</h3>
-            <ul>
-                <li><strong>Web Applications</strong>: Caching user sessions, preferences, and dashboard data.</li>
-                <li><strong>APIs</strong>: Storing responses for common requests to improve throughput.</li>
-                <li><strong>E-commerce Platforms</strong>: Caching product details, pricing information, and inventory status.</li>
-                <li><strong>Gaming Servers</strong>: Storing player statistics and game state data for quick access.</li>
-            </ul>
-
-            <h3>Challenges and Best Practices</h3>
-
-            <h4>Data Consistency</h4>
-            <ul>
-                <li><strong>Challenge</strong>: Ensuring the cache reflects the most recent data.</li>
-                <li><strong>Best Practices</strong>:
-                    <ul>
-                        <li><strong>Cache Invalidation Strategies</strong>: Use TTL, write-through, write-back, or event-based invalidation.</li>
-                        <li><strong>Version Control</strong>: Implement versioning to track changes and update caches accordingly.</li>
-                    </ul>
+                <li><strong>Write-Through and Write-Back Strategies</strong>:
+                    <p>
+                        Ensuring that write operations update both the cache and the data source appropriately to maintain consistency.
+                    </p>
+                </li>
+                <li><strong>Versioning</strong>:
+                    <p>
+                        Using version numbers or timestamps to track changes in data, allowing the cache to determine if its entries are up-to-date.</p>
+                </li>
+                <li><strong>Push Updates</strong>:
+                    <p>
+                        Automatically pushing updates to all cache nodes when the original data changes, ensuring immediate consistency across caches.</p>
                 </li>
             </ul>
+            <p>
+                Properly implementing these strategies helps maintain data consistency, reducing the risk of serving stale or incorrect data to users.
+            </p>
+            <div class="diagram">
+                <img src="https://via.placeholder.com/600x300?text=Data+Consistency+Strategies" alt="Data Consistency Strategies Diagram">
+            </div>
+        </div>
 
-            <h4>Memory Management</h4>
+        <!-- Question 14 -->
+        <div id="question14">
+            <h2 class="section-title"><i class="fas fa-server"></i> What are the different types of application server caching and their benefits?</h2>
+            <p>
+                Application server caching involves storing frequently accessed data in memory at the server level to enhance performance and reduce latency. The different types include:
+            </p>
+            <ol>
+                <li><strong>In-Memory Caching</strong>
+                    <p>
+                        Stores data directly in the server's RAM for extremely fast access. Benefits include rapid data retrieval and low latency, making it ideal for storing session data, user profiles, and frequently accessed objects.
+                    </p>
+                </li>
+                <li><strong>Distributed Caching</strong>
+                    <p>
+                        Spreads the cache across multiple servers or nodes, allowing for greater scalability and fault tolerance. Benefits include handling large-scale applications with high availability requirements and distributing load effectively.
+                    </p>
+                </li>
+                <li><strong>Object Caching</strong>
+                    <p>
+                        Caches specific objects or data structures to avoid repeated computations or database access. Benefits include reduced processing time and lower database load, enhancing overall application efficiency.
+                    </p>
+                </li>
+                <li><strong>Database Caching</strong>
+                    <p>
+                        Caches query results from the database to minimize the number of direct database interactions. Benefits include decreased database load, faster response times for data retrieval, and improved application performance.
+                    </p>
+                </li>
+            </ol>
+            <div class="diagram">
+                <img src="https://via.placeholder.com/600x300?text=Application+Server+Caching+Types" alt="Application Server Caching Types Diagram">
+            </div>
+        </div>
+
+        <!-- Question 15 -->
+        <div id="question15">
+            <h2 class="section-title"><i class="fas fa-cloud"></i> How do Content Delivery Networks (CDNs) enhance caching effectiveness?</h2>
+            <p>
+                Content Delivery Networks (CDNs) enhance caching effectiveness by distributing cached content across multiple geographically dispersed servers. This proximity to end-users offers several benefits:
+            </p>
             <ul>
-                <li><strong>Challenge</strong>: Preventing resource exhaustion due to limited memory.</li>
-                <li><strong>Best Practices</strong>:
-                    <ul>
-                        <li><strong>Eviction Policies</strong>: Apply LRU, FIFO (First In, First Out), or LFU (Least Frequently Used) policies.</li>
-                        <li><strong>Capacity Planning</strong>: Monitor cache usage and scale resources as needed.</li>
-                    </ul>
+                <li><strong>Reduced Latency</strong>: By serving content from servers closer to users, CDNs decrease the time it takes for data to travel, resulting in faster load times.</li>
+                <li><strong>Load Balancing</strong>: CDNs distribute traffic across multiple servers, preventing any single server from becoming a bottleneck and ensuring smooth content delivery even during high traffic periods.</li>
+                <li><strong>Improved Availability</strong>: With multiple cache locations, CDNs provide redundancy. If one server fails, another can seamlessly take over, enhancing the reliability and availability of the content.</li>
+                <li><strong>Scalability</strong>: CDNs can handle large volumes of traffic and content requests efficiently, making them ideal for large-scale applications and services.</li>
+                <li><strong>Security Enhancements</strong>: CDNs often incorporate security features like DDoS protection and secure data transmission (HTTPS), safeguarding content from various threats.</li>
+            </ul>
+            <div class="diagram">
+                <img src="https://via.placeholder.com/600x300?text=CDN+Caching+Effectiveness" alt="CDN Caching Effectiveness Diagram">
+            </div>
+        </div>
+
+        <!-- Question 16 -->
+        <div id="question16">
+            <h2 class="section-title"><i class="fas fa-hdd"></i> What strategies can be employed to handle situations when the cache becomes full?</h2>
+            <p>
+                When a cache becomes full, it's essential to manage the stored data efficiently to maintain performance. The following strategies can be employed:
+            </p>
+            <ol>
+                <li><strong>Eviction Policies</strong>
+                    <p>
+                        Implementing policies like Least Recently Used (LRU), Least Frequently Used (LFU), or First-In-First-Out (FIFO) to determine which data to remove from the cache when space is needed.
+                    </p>
+                </li>
+                <li><strong>Scaling the Cache</strong>
+                    <p>
+                        Increasing the cache size or adding more cache nodes to accommodate more data, ensuring that the cache can handle increased load without frequent evictions.
+                    </p>
+                </li>
+                <li><strong>Selective Caching</strong>
+                    <p>
+                        Caching only the most critical and frequently accessed data, avoiding unnecessary data storage in the cache to optimize space utilization.
+                    </p>
+                </li>
+                <li><strong>Data Compression</strong>
+                    <p>
+                        Compressing cached data to reduce its size, allowing more data to be stored within the same cache space.
+                    </p>
+                </li>
+                <li><strong>Hierarchical Caching</strong>
+                    <p>
+                        Using multiple cache layers with different sizes and speeds. Less frequently accessed data can be moved to slower, larger caches, freeing up space in the faster, smaller caches for more critical data.
+                    </p>
+                </li>
+                <li><strong>TTL (Time-To-Live)</strong>
+                    <p>
+                        Setting expiration times for cached data so that it is automatically removed after a certain period, preventing the cache from being filled with stale data.
+                    </p>
+                </li>
+            </ol>
+            <div class="diagram">
+                <img src="https://via.placeholder.com/600x300?text=Cache+Full+Strategies" alt="Cache Full Strategies Diagram">
+            </div>
+        </div>
+
+        <!-- Question 17 -->
+        <div id="question17">
+            <h2 class="section-title"><i class="fas fa-hourglass-half"></i> Explain the concept of Time-to-Live (TTL) in caching and its significance.</h2>
+            <p>
+                <strong>Time-to-Live (TTL)</strong> is a caching mechanism that specifies the duration for which cached data remains valid. After the TTL expires, the cached data is considered stale and is either refreshed from the original data source or removed from the cache. The significance of TTL includes:
+            </p>
+            <ul>
+                <li><strong>Data Freshness</strong>: Ensures that the cache does not serve outdated information by automatically invalidating stale data.</li>
+                <li><strong>Cache Management</strong>: Helps in managing cache size by periodically removing expired data, freeing up space for new entries.</li>
+                <li><strong>Consistency</strong>: Maintains consistency between the cache and the underlying data source by enforcing regular updates.</li>
+                <li><strong>Performance Optimization</strong>: Balances between data freshness and cache hit rates, optimizing overall system performance by reducing unnecessary data fetches while keeping data reasonably up-to-date.</li>
+            </ul>
+            <div class="diagram">
+                <img src="https://via.placeholder.com/600x300?text=Time-to-Live+TTL" alt="Time-to-Live (TTL) Diagram">
+            </div>
+        </div>
+
+        <!-- Question 18 -->
+        <div id="question18">
+            <h2 class="section-title"><i class="fas fa-network-wired"></i> How does hierarchical caching differ from global caching?</h2>
+            <p>
+                <strong>Hierarchical Caching</strong> and <strong>Global Caching</strong> are two distinct caching strategies used to optimize data retrieval and system performance.
+            </p>
+            <ul>
+                <li><strong>Hierarchical Caching</strong>
+                    <p>
+                        Involves multiple levels of caches with varying sizes and speeds, arranged in a hierarchy. Data flows through these levels based on access patterns:
+                        <ul>
+                            <li><strong>L1 Cache</strong>: Small and fast, located close to the processor or application server.</li>
+                            <li><strong>L2 Cache</strong>: Larger and slightly slower, acting as a secondary cache layer.</li>
+                            <li><strong>L3 Cache</strong>: Even larger and slower, serving as a tertiary cache layer.</li>
+                        </ul>
+                        <p>
+                            This approach optimizes performance by ensuring that frequently accessed data is quickly available in the faster caches, while less frequently accessed data resides in slower, larger caches.
+                        </p>
+                    </p>
+                </li>
+                <li><strong>Global Caching</strong>
+                    <p>
+                        Refers to caching data across multiple regions and data centers to provide quick access to users worldwide. In a global caching setup:
+                        <ul>
+                            <li>Cached data is stored in geographically distributed servers.</li>
+                            <li>Users access data from the nearest cache server, reducing latency.</li>
+                            <li>Aims to enhance availability and performance on a global scale.</li>
+                        </ul>
+                        <p>
+                            While hierarchical caching focuses on organizing cache layers within a single system or application, global caching emphasizes distributing cache resources across multiple locations to serve a global user base effectively.
+                        </p>
+                    </p>
                 </li>
             </ul>
+            <div class="diagram">
+                <img src="https://via.placeholder.com/600x300?text=Hierarchical+vs+Global+Caching" alt="Hierarchical vs Global Caching Diagram">
+            </div>
+        </div>
 
-            <h4>Security</h4>
+        <!-- Question 19 -->
+        <div id="question19">
+            <h2 class="section-title"><i class="fas fa-database"></i> What role does CacheLib play in Facebook’s caching infrastructure?</h2>
+            <p>
+                <strong>CacheLib</strong> is an open-source caching engine developed by Facebook to handle web-scale services efficiently. It plays a crucial role in Facebook’s caching infrastructure by providing:
+            </p>
             <ul>
-                <li><strong>Challenge</strong>: Protecting sensitive data stored in the cache.</li>
-                <li><strong>Best Practices</strong>:
-                    <ul>
-                        <li><strong>Encryption</strong>: Encrypt sensitive data within the cache.</li>
-                        <li><strong>Access Control</strong>: Restrict access to the cache using authentication and authorization mechanisms.</li>
-                    </ul>
+                <li><strong>High Performance</strong>: Designed for high throughput and low latency, enabling rapid data retrieval and storage operations.</li>
+                <li><strong>Scalability</strong>: Supports scaling cache services horizontally, allowing Facebook to manage large volumes of data across numerous servers.</li>
+                <li><strong>Flexibility</strong>: Offers a pluggable architecture, allowing customization and integration with various caching strategies and backend systems.</li>
+                <li><strong>Thread Safety</strong>: Ensures safe concurrent access in multi-threaded environments, which is essential for handling the massive traffic Facebook receives.</li>
+                <li><strong>Consistency</strong>: Maintains data consistency across distributed cache nodes, ensuring reliable and up-to-date data delivery to users.</li>
+            </ul>
+            <p>
+                By leveraging CacheLib, Facebook can efficiently build and scale high-performance cache services that meet the demands of its global user base, ensuring quick and reliable access to cached data.
+            </p>
+            <div class="diagram">
+                <img src="https://via.placeholder.com/600x300?text=CacheLib+Role" alt="CacheLib Role Diagram">
+            </div>
+        </div>
+
+        <!-- Question 20 -->
+        <div id="question20">
+            <h2 class="section-title"><i class="fas fa-object-group"></i> Describe the features and benefits of TAO (The Associations and Objects) in Facebook’s caching system.</h2>
+            <p>
+                <strong>TAO (The Associations and Objects)</strong> is Facebook's custom-built, scalable, and distributed data store designed to manage the social graph and provide low-latency access to user data. Key features and benefits include:
+            </p>
+            <ul>
+                <li><strong>Two-Tiered Caching</strong>
+                    <p>
+                        Combines in-memory caching with distributed caching to optimize data retrieval speed and scalability. The first tier handles the most frequently accessed data, while the second tier manages a broader dataset.
+                    </p>
+                </li>
+                <li><strong>Low-Latency Access</strong>
+                    <p>
+                        Ensures minimal delay in data retrieval by leveraging efficient caching mechanisms, which is critical for maintaining a responsive user experience on Facebook.
+                    </p>
+                </li>
+                <li><strong>Scalability</strong>
+                    <p>
+                        Designed to handle billions of users and their interactions, TAO scales horizontally by adding more servers to manage increasing data volumes and traffic.
+                    </p>
+                </li>
+                <li><strong>Data Consistency</strong>
+                    <p>
+                        Maintains synchronization between caches and the underlying data store through cache invalidation strategies and version control, ensuring users always access the most up-to-date information.
+                    </p>
+                </li>
+                <li><strong>Efficient Data Management</strong>
+                    <p>
+                        Manages complex relationships in the social graph by efficiently storing and retrieving associations and objects, enabling quick access to interconnected data.
+                    </p>
+                </li>
+                <li><strong>Fault Tolerance</strong>
+                    <p>
+                        Incorporates redundancy and failover mechanisms to ensure high availability and reliability, even in the event of server failures.
+                    </p>
                 </li>
             </ul>
-        </section>
+            <p>
+                Overall, TAO is a critical component of Facebook's backend infrastructure, enabling the platform to deliver personalized content and interactions to users swiftly and reliably by efficiently managing and caching vast amounts of social graph data.
+            </p>
+            <div class="diagram">
+                <img src="https://via.placeholder.com/600x300?text=TAO+Features" alt="TAO Features Diagram">
+            </div>
+        </div>
 
-        <hr>
+    </div>
 
-        <section>
-            <h2>Addressing Data Consistency</h2>
+    <!-- Conclusion -->
+    <div class="summary">
+        <h2 class="section-title"><i class="fas fa-check-circle"></i> Conclusion</h2>
+        <p>
+            Caching is essential for optimizing the performance and scalability of internet services by reducing latency and minimizing the load on backend systems. By strategically implementing various caching mechanisms and addressing challenges like data consistency and storage overhead, developers can ensure efficient data retrieval and a seamless user experience. Understanding different caching types, eviction strategies, and write policies is crucial for designing robust and high-performance applications.
+        </p>
+    </div>
 
-            <h3>Version Control Systems</h3>
-            <ul>
-                <li><strong>Implementation</strong>: Use version numbers or timestamps for cached data.</li>
-                <li><strong>Benefit</strong>: Allows the system to verify if the cached data is up-to-date before serving it.</li>
-            </ul>
+    <!-- Floating Back to Questions Button -->
+    <div class="floating-button">
+        <a href="#review-questions" title="Back to Questions"><i class="fas fa-arrow-up"></i></a>
+    </div>
 
-            <h3>Cache Invalidation Strategies</h3>
-            <ul>
-                <li><strong>Time-to-Live (TTL)</strong>: Cached data expires after a predefined period.</li>
-                <li><strong>Event-Based Invalidation</strong>: The cache is updated or invalidated when specific events occur, such as data modifications.</li>
-                <li><strong>Write-Through Caching</strong>: Updates occur simultaneously in both the cache and the database.</li>
-            </ul>
-
-            <h3>Push Updates</h3>
-            <ul>
-                <li><strong>Description</strong>: The system pushes changes to all cached copies when the original data is updated.</li>
-                <li><strong>Benefit</strong>: Ensures all users receive the most recent data without waiting for the cache to expire.</li>
-            </ul>
-        </section>
-
-        <hr>
-
-        <section>
-            <h2>Managing Storage Overhead</h2>
-
-            <h3>Selective Caching</h3>
-            <ul>
-                <li><strong>Strategy</strong>: Cache only high-demand data.</li>
-                <li><strong>Benefit</strong>: Reduces memory consumption by focusing on data that provides the most performance benefit.</li>
-            </ul>
-
-            <h3>Compression Techniques</h3>
-            <ul>
-                <li><strong>Strategy</strong>: Compress cached data using algorithms like GZIP.</li>
-                <li><strong>Benefit</strong>: Saves storage space while maintaining acceptable access speeds.</li>
-            </ul>
-
-            <h3>Hierarchical Caching</h3>
-            <ul>
-                <li><strong>Implementation</strong>: Use multiple cache levels (e.g., L1, L2, L3) with varying speeds and sizes.</li>
-                <li><strong>Benefit</strong>: Optimizes performance by storing the most frequently accessed data in the fastest cache.</li>
-            </ul>
-        </section>
-
-        <hr>
-
-        <section>
-            <h2>Facebook's Caching System: A Case Study</h2>
-
-            <h3>Multi-Level Caching Strategy</h3>
-
-            <h4>L1 Cache (Client-Side)</h4>
-            <ul>
-                <li><strong>Managed By</strong>: TAO (The Associations and Objects) clients.</li>
-                <li><strong>Function</strong>: Provides quick access to social graph data, such as user profiles and relationships.</li>
-            </ul>
-
-            <h4>L2 Cache (Server-Side)</h4>
-            <ul>
-                <li><strong>Managed By</strong>: Memcached, a distributed caching system.</li>
-                <li><strong>Function</strong>: Stores frequently accessed data that didn't hit the L1 cache.</li>
-            </ul>
-
-            <h3>CacheLib: Facebook's Open-Source Caching Engine</h3>
-            <ul>
-                <li><strong>Description</strong>: A pluggable caching engine designed for web-scale services.</li>
-                <li><strong>Features</strong>:
-                    <ul>
-                        <li><strong>Thread-Safe API</strong>: Ensures high throughput with minimal overhead.</li>
-                        <li><strong>Customization</strong>: Allows for tailored caching solutions per service requirements.</li>
-                    </ul>
-                </li>
-                <li><strong>Benefits</strong>: Enhances performance and scalability across Facebook's services.</li>
-            </ul>
-
-            <h3>Photo Caching</h3>
-            <ul>
-                <li><strong>Challenge</strong>: Efficiently serving billions of photos to users worldwide.</li>
-                <li><strong>Solution</strong>:
-                    <ul>
-                        <li><strong>Haystack Machines</strong>: Specialized servers optimized for storing and retrieving photos.</li>
-                        <li><strong>Multi-Layered Caching</strong>: Implements several cache layers to reduce latency and server load.</li>
-                    </ul>
-                </li>
-                <li><strong>Benefit</strong>: Quick photo delivery with minimal delay.</li>
-            </ul>
-
-            <h3>Data Consistency and Invalidation</h3>
-            <ul>
-                <li><strong>Version Control</strong>: Tracks changes to ensure the latest data is served.</li>
-                <li><strong>Cache Invalidation</strong>: Employs strategies to invalidate outdated data promptly.</li>
-                <li><strong>Push Updates</strong>: Utilizes mechanisms to synchronize cache updates across all servers.</li>
-            </ul>
-
-            <h3>Storage Optimization</h3>
-            <ul>
-                <li><strong>Selective Caching</strong>: Focuses on caching data that significantly impacts performance.</li>
-                <li><strong>Compression</strong>: Uses advanced algorithms to reduce the size of cached data.</li>
-                <li><strong>Hierarchical Caching</strong>: Implements multiple cache tiers to balance speed and storage efficiency.</li>
-            </ul>
-        </section>
-
-        <hr>
-
-        <section>
-            <h2>TAO Clients at Facebook</h2>
-            <p>TAO (The Associations and Objects) is Facebook's custom-built, distributed data store designed to manage the social graph efficiently.</p>
-
-            <h3>Key Features of TAO Clients</h3>
-
-            <h4>Two-Tiered Caching</h4>
-            <ul>
-                <li><strong>In-Memory Cache</strong>: Stores recently accessed data for quick retrieval.</li>
-                <li><strong>Distributed Cache</strong>: Shares cached data across multiple servers for scalability.</li>
-            </ul>
-
-            <h4>Low-Latency Access</h4>
-            <ul>
-                <li><strong>Design Goal</strong>: Minimize response times for data retrieval and storage operations.</li>
-                <li><strong>Impact</strong>: Maintains a responsive user experience, even under heavy load.</li>
-            </ul>
-
-            <h4>Scalability</h4>
-            <ul>
-                <li><strong>Capability</strong>: Handles billions of users and complex social interactions.</li>
-                <li><strong>Approach</strong>: Distributes data and caching across numerous servers and data centers.</li>
-            </ul>
-
-            <h4>Data Consistency</h4>
-            <ul>
-                <li><strong>Strategies</strong>:
-                    <ul>
-                        <li><strong>Cache Invalidation</strong>: Updates or removes stale data promptly.</li>
-                        <li><strong>Version Control</strong>: Ensures users receive the most recent information.</li>
-                    </ul>
-                </li>
-            </ul>
-        </section>
-
-        <hr>
-
-        <section>
-            <h2>Conclusion</h2>
-            <p>Caching is an indispensable component in the architecture of modern web services and applications. By strategically storing data closer to the point of use, caching systems like those employed by Facebook significantly improve performance and scalability. Understanding the types of caching, their benefits, and the challenges involved is crucial for designing efficient and responsive systems.</p>
-        </section>
-
-        <hr>
-
-        <section>
-            <h2>References</h2>
-            <ul>
-                <li>"The TAO of Facebook: Engineering an Efficient, Scalable Social Graph Data Store" - Facebook Engineering</li>
-                <li>"CacheLib: A Caching Engine for Modern Web Services" - Facebook Open Source</li>
-                <li>"Scaling Memcache at Facebook" - Facebook Engineering</li>
-                <li>"Facebook's Photo Storage" - High Scalability Blog</li>
-            </ul>
-        </section>
-
-        <hr>
-
-        <footer>
-            <p>&copy; 2024 Introduction to Caching Lecture Notes</p>
-        </footer>
-    </main>
-
+    <!-- JavaScript for Read, Pause, Stop Buttons -->
     <script>
-        // Check if the browser supports the Web Speech API
-        if ('speechSynthesis' in window) {
-            const readButton = document.getElementById('readButton');
-            const pauseButton = document.getElementById('pauseButton');
-            const stopButton = document.getElementById('stopButton');
-            let utterance;
-            
-            // Function to log the available voices
-            function listVoices() {
-                const voices = speechSynthesis.getVoices();
-                console.log('Available Voices:', voices);
-    
-                // Optionally, display the voices on the page for easier viewing
-                const voiceList = document.createElement('ul');
-                voices.forEach((voice, index) => {
-                    const listItem = document.createElement('li');
-                    listItem.textContent = `Voice ${index}: ${voice.name} (${voice.lang}) - ${voice.default ? "Default" : "Not Default"}`;
-                    voiceList.appendChild(listItem);
-                });
-                document.body.appendChild(voiceList); // Append voice list to the body for display
+        const readBtn = document.getElementById('readBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const stopBtn = document.getElementById('stopBtn');
+
+        // Initialize Speech Synthesis
+        const synth = window.speechSynthesis;
+        let voices = [];
+        let utterances = [];
+        let currentUtteranceIndex = 0;
+        let isPaused = false;
+
+        // Function to load voices
+        function loadVoices() {
+            voices = synth.getVoices();
+            if (voices.length !== 0) {
+                initializeUtterances();
+            } else {
+                // Retry after a short delay if voices are not loaded yet
+                setTimeout(loadVoices, 100);
             }
-    
-            // Fetch and list voices
-            speechSynthesis.onvoiceschanged = listVoices; // Fetch voices when they become available
-    
-            readButton.addEventListener('click', () => {
-                if (speechSynthesis.speaking) {
-                    return;
-                }
-    
-                // Get the text content from the main section
-                const text = document.querySelector('main').innerText;
-    
-                // Create a new utterance
-                utterance = new SpeechSynthesisUtterance(text);
-    
-                // Optionally, set voice and other properties
-                const voices = speechSynthesis.getVoices();
-                const randomVoiceIndex = Math.floor(Math.random() * 5) + 1; // You can change this index to use different voices
-                utterance.rate = 1.7; // For example, this will be 1.5 times faster than normal
-                speechSynthesis.speak(utterance);
-            });
-    
-            pauseButton.addEventListener('click', () => {
-                if (speechSynthesis.speaking && !speechSynthesis.paused) {
-                    speechSynthesis.pause();
-                }
-            });
-    
-            stopButton.addEventListener('click', () => {
-                if (speechSynthesis.speaking) {
-                    speechSynthesis.cancel();
-                }
-            });
-    
-        } else {
-            // Fallback if Web Speech API is not supported
-            document.getElementById('controls').innerHTML = '<p>Your browser does not support the Web Speech API.</p>';
         }
+
+        loadVoices();
+
+        // Function to initialize utterances
+        function initializeUtterances() {
+            const sections = Array.from(document.querySelectorAll('.lecture-notes div[id^="question"]'));
+            utterances = sections.map((section, index) => {
+                const utterance = new SpeechSynthesisUtterance(section.innerText);
+                // Set speech parameters
+                utterance.rate = 1.2;    // Adjust as needed
+                utterance.pitch = 1.0;   // Adjust as needed
+
+                // Select a desired voice
+                const desiredVoiceName = 'Google US English'; // Change as needed
+                const desiredVoice = voices.find(voice => voice.name === desiredVoiceName);
+                utterance.voice = desiredVoice || voices[0]; // Fallback to first available voice
+
+                // Event listener for when the utterance starts
+                utterance.onstart = () => {
+                    highlightSection(section);
+                };
+
+                // Event listener for when the utterance ends
+                utterance.onend = () => {
+                    removeHighlight(section);
+                    currentUtteranceIndex++;
+                    // Automatically speak the next utterance
+                    if (currentUtteranceIndex < utterances.length) {
+                        synth.speak(utterances[currentUtteranceIndex]);
+                    }
+                };
+
+                return utterance;
+            });
+        }
+
+        // Function to highlight a section
+        function highlightSection(section) {
+            // Remove existing highlights
+            document.querySelectorAll('.lecture-notes div[id^="question"]').forEach(sec => {
+                sec.classList.remove('highlight');
+            });
+            // Add highlight to the current section
+            if (section) {
+                section.classList.add('highlight');
+                // Scroll the section into view smoothly
+                section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        // Function to remove highlight from a section
+        function removeHighlight(section) {
+            if (section) {
+                section.classList.remove('highlight');
+            }
+        }
+
+        // Read Button Event Listener
+        readBtn.addEventListener('click', () => {
+            if (synth.speaking && !isPaused) {
+                console.error('speechSynthesis.speaking');
+                return;
+            }
+
+            if (isPaused) {
+                synth.resume();
+                isPaused = false;
+                return;
+            }
+
+            if (utterances.length === 0) {
+                initializeUtterances();
+            }
+
+            if (currentUtteranceIndex < utterances.length) {
+                synth.speak(utterances[currentUtteranceIndex]);
+            }
+        });
+
+        // Pause Button Event Listener
+        pauseBtn.addEventListener('click', () => {
+            if (synth.speaking && !synth.paused) {
+                synth.pause();
+                isPaused = true;
+            }
+        });
+
+        // Stop Button Event Listener
+        stopBtn.addEventListener('click', () => {
+            if (synth.speaking) {
+                synth.cancel();
+                removeHighlight(document.querySelectorAll('.lecture-notes div[id^="question"]')[currentUtteranceIndex]);
+                currentUtteranceIndex = 0;
+                isPaused = false;
+            }
+        });
+
+        // Reload utterances when voices change (for some browsers)
+        window.speechSynthesis.onvoiceschanged = () => {
+            voices = synth.getVoices();
+            initializeUtterances();
+        };
     </script>
-    
+
+    <!-- Bootstrap JS and dependencies -->
+    <script
+      src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+      integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-LtrjvnR4JutjSgKzQbC6jq2mtKk7E5oLwA95R1HYw5FkNo7mOeGswT8m4U2A0gMf"
+      crossorigin="anonymous"
+    ></script>
 </body>
 </html>
