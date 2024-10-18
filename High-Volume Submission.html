@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Design: High-Volume Submission and Test Case Management</title>
+    <!-- Bootstrap CSS for styling -->
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-M2VMdX1JZ3K8Ht1hEeA8PTP1OWxP6lF6LVH9KvH3VdASUeP5XkX6V2z0E6yG9h1e"
+      crossorigin="anonymous"
+    >
+    <!-- Font Awesome for icons -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+      rel="stylesheet"
+    >
+    <!-- Mermaid.js for UML Diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: { curve: 'linear' },
+            sequence: { actorMargin: 50 }
+        });
+    </script>
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .section-title {
+            color: #343a40;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+        .diagram {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .mermaid {
+            margin: 20px auto;
+            max-width: 100%;
+        }
+        .highlight {
+            background-color: #ffff99; /* Light yellow background */
+            transition: background-color 0.5s ease;
+        }
+        .component-box {
+            padding: 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            background-color: #ffffff;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .component-icon {
+            font-size: 50px;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        .arrow {
+            font-size: 30px;
+            color: #6c757d;
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- Page Header -->
+        <header class="text-center mb-5">
+            <h1 class="section-title"><i class="fas fa-project-diagram"></i> System Design: High-Volume Submission and Test Case Management</h1>
+            <p class="lead">A scalable architecture to handle millions of submissions efficiently using caching and cloud storage solutions.</p>
+        </header>
+
+        <!-- Problem Overview -->
+        <section>
+            <h2 class="section-title"><i class="fas fa-exclamation-triangle"></i> Problem Overview</h2>
+            <p>
+                The system processes a large number of user submissions for coding challenges. It consists of:
+            </p>
+            <ul>
+                <li><strong>Architecture</strong>: User requests are sent to a load balancer, which directs traffic to an application server. The server communicates with a database that stores metadata (e.g., problem descriptions, file paths) and retrieves test cases stored in AWS S3 for solution verification.</li>
+                <li><strong>Challenges</strong>:
+                    <ul>
+                        <li>There are 1 million users making frequent submissions, leading to an estimated <strong>350 submissions per second</strong>.</li>
+                        <li>The current workflow involves repeatedly fetching test cases from S3, which can be <strong>5–10 MB</strong> each. This results in <strong>performance bottlenecks</strong> due to database hits and S3 access delays.</li>
+                    </ul>
+                </li>
+            </ul>
+            <div class="diagram">
+                <!-- Mermaid Diagram: Problem Statement Overview -->
+                <div class="mermaid">
+                    graph TD
+                        A[High Volume Submissions] --> B[Application Servers]
+                        B --> C["AWS S3 Test Case Storage"]
+                        B --> D[(Database)]
+                        C --> D
+                        A --> E[Performance Bottlenecks]
+                        E --> F[Increased Latency]
+                        E --> G[Scalability Issues]
+                </div>
+                <p><em>Figure 0: Problem Statement Overview</em></p>
+            </div>
+        </section>
+
+        <!-- Key Concepts and Challenges -->
+        <section>
+            <h2 class="section-title"><i class="fas fa-key"></i> Key Concepts and Challenges</h2>
+            <ol>
+                <li>
+                    <strong>Why is the current solution slow?</strong>
+                    <p>
+                        The system fetches test case URLs from the database, retrieves the test case file from AWS S3, and then evaluates the solution. This process involves high-latency steps, especially fetching large files from S3, leading to slow performance.
+                    </p>
+                </li>
+                <li>
+                    <strong>Why didn’t caching on the application server work?</strong>
+                    <p>
+                        The cache wasn't updated when test cases were modified, resulting in stale data being used for evaluations. Time-to-live (TTL) caching strategies also failed since changes need to be reflected immediately to maintain accuracy, and delayed invalidation isn't acceptable.
+                    </p>
+                </li>
+            </ol>
+        </section>
+
+        <!-- Exploring Alternative Caching Strategies -->
+        <section>
+            <h2 class="section-title"><i class="fas fa-search"></i> Exploring Alternative Caching Strategies</h2>
+            <h3><i class="fas fa-clipboard-list"></i> 1. Global Cache</h3>
+            <ul>
+                <li><strong>Idea</strong>: Instead of individual application servers caching files, a global cache would store files centrally, ensuring consistency across servers.</li>
+                <li><strong>Challenge</strong>: This introduces high costs, and the slow step—retrieving large files from S3 or transferring files over the network—remains, making it impractical.</li>
+            </ul>
+
+            <h3><i class="fas fa-clipboard-list"></i> 2. Write-Through Cache</h3>
+            <ul>
+                <li><strong>Idea</strong>: Updates to test cases are immediately written to both the cache and the database to maintain consistency.</li>
+                <li><strong>Challenge</strong>: Still doesn’t solve the latency issue from S3 or provide 100% consistency when the data is cached across distributed servers.</li>
+            </ul>
+
+            <h3><i class="fas fa-clipboard-check"></i> 3. File Metadata-Based Caching (Preferred Solution)</h3>
+            <p><strong>Concept</strong>: Leverage file metadata to check if a file has been updated.</p>
+            <ul>
+                <li>
+                    <strong>How it works</strong>:
+                    <ul>
+                        <li>Each test case file has associated metadata (e.g., <code>problem_id</code>, <code>input_file_updated_at</code>).</li>
+                        <li>When a user submits a solution, the system checks the database for the last update time of the test case.</li>
+                        <li>If the file exists in the application server's cache and matches the latest update timestamp, it’s used. If the cached file is outdated or absent, the system fetches the updated file from S3 and stores it locally for future use.</li>
+                    </ul>
+                </li>
+                <li><strong>Benefit</strong>: This approach minimizes unnecessary file retrievals from S3 while ensuring that the cache always has the latest version of the file. It provides a clear mechanism for cache invalidation using the file’s <code>updated_at</code> timestamp.</li>
+            </ul>
+
+            <div class="diagram">
+                <!-- Mermaid Diagram: Caching Mechanism Integration -->
+                <div class="mermaid">
+                    graph LR
+                        AppServer["Application Server"] -->|Check Cache| Cache["Database"]
+                        Cache -->|Cache Hit| AS_Hit["Retrieve Test Cases"]
+                        Cache -->|Cache Miss| S3_Fetch["Fetch from AWS S3"]
+                        S3_Fetch -->|Store in Cache| Cache
+                        S3_Fetch --> AS_Miss["Retrieve Test Cases"]
+                        AppServer -->|Execute Tests| TestingEngine["Testing Engine"]
+                        TestingEngine -->|Store Results| Database[(Database)]
+                        TestingEngine -->|Store Results| ResultStorage["Result Storage"]
+                </div>
+                <p><em>Figure 3: Caching Mechanism Integration</em></p>
+            </div>
+        </section>
+
+        <!-- Workflow for File Updates and Submissions -->
+        <section>
+            <h2 class="section-title"><i class="fas fa-sync"></i> Workflow for File Updates and Submissions</h2>
+            <h3><i class="fas fa-upload"></i> 1. File Update Process</h3>
+            <ul>
+                <li>When a new test case is uploaded, it’s stored in S3 and its metadata (e.g., file path, update timestamp) is updated in the database.</li>
+                <li>For any new submission, the system first checks the database for the latest metadata. If the cache contains an outdated version, it fetches the updated file from S3 and stores it locally.</li>
+            </ul>
+
+            <h3><i class="fas fa-code"></i> 2. Handling Submissions</h3>
+            <ul>
+                <li>For each submission, the system retrieves the file metadata (including the update timestamp) from the database.</li>
+                <li>If the file with the correct <code>updated_at</code> timestamp exists in the server’s cache, it's used for evaluation. If not, the file is fetched from S3 and cached for future requests.</li>
+            </ul>
+        </section>
+
+        <!-- Why Metadata-Based Caching is Effective -->
+        <section>
+            <h2 class="section-title"><i class="fas fa-check-circle"></i> Why Metadata-Based Caching is Effective</h2>
+            <ul>
+                <li><strong>Efficient Cache Invalidation</strong>: By relying on metadata (like <code>updated_at</code>), the system can ensure that only updated files are fetched from S3. This minimizes unnecessary cache invalidations and avoids using stale test cases.</li>
+                <li><strong>Reduced Load on S3 and Network</strong>: By caching the latest files locally on each application server, the number of times files are fetched from S3 is significantly reduced, improving overall performance.</li>
+                <li><strong>Scalability</strong>: This approach scales well for a large number of users and submissions, as it limits the need for repeated retrieval of large files and ensures fast access to test cases.</li>
+            </ul>
+        </section>
+
+        <!-- Alternative Caching Strategies Diagram (Optional) -->
+        <!-- Can include if desired -->
+
+        <!-- Conclusion -->
+        <section>
+            <h2 class="section-title"><i class="fas fa-check-double"></i> Conclusion</h2>
+            <p>
+                The best approach to solve the performance bottleneck while ensuring cache consistency is a <strong>metadata-based caching system</strong>. By tracking file updates through metadata and ensuring that cached files are invalidated based on their last update time, the system can maintain accurate and fast evaluations without the need for expensive global caches or inefficient TTL-based strategies.
+            </p>
+            <p>
+                This strategy ensures a scalable, efficient, and consistent system for handling a high volume of submissions, optimizing resource utilization, and enhancing user experience by providing swift and accurate feedback on code submissions.
+            </p>
+        </section>
+
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script
+      src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+      integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-LtrjvnR4JutjSgKzQbC6jq2mtKk7E5oLwA95R1HYw5FkNo7mOeGswT8m4U2A0gMf"
+      crossorigin="anonymous"
+    ></script>
+</body>
+</html>
