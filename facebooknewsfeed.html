@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Facebook's Newsfeed Analysis</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Mermaid.js -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true });
+    </script>
+    <!-- Custom Styles -->
+    <style>
+        body {
+            padding-top: 50px;
+        }
+        .uml-diagram {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .uml-diagram .mermaid {
+            margin: 0 auto;
+            max-width: 800px;
+        }
+        .icon {
+            width: 24px;
+            height: 24px;
+        }
+        .tts-buttons {
+            margin: 20px 0;
+        }
+        h2 {
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Facebook's Newsfeed Analysis</a>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<div class="container">
+
+    <!-- Title -->
+    <div class="mt-5">
+        <h1 class="display-4">Facebook's Newsfeed</h1>
+        <p class="lead">How Facebook computes its newsfeed</p>
+    </div>
+
+    <!-- Text-to-Voice Buttons -->
+    <div class="tts-buttons">
+        <button id="readBtn" class="btn btn-primary">Read</button>
+        <button id="pauseBtn" class="btn btn-warning">Pause</button>
+        <button id="stopBtn" class="btn btn-danger">Stop</button>
+    </div>
+
+    <!-- Content Sections -->
+    <div id="content">
+
+        <!-- Introduction -->
+        <section>
+            <p>
+                Let's do another case study. What if we were supposed to build the system that computes news feed for Facebook. Let's first discuss the basic architecture of Facebook.
+            </p>
+            <p>
+                Facebook has a lot of users, and each user has a bunch of attributes. Let’s first discuss the schema of Facebook if all information could fit on a single machine SQL DB. You can for now assume that we care about the most basic v0 version of Facebook which has no concept of pages/groups/likes/comments, etc.
+            </p>
+            <p>
+                Users also have friends, and users can make posts on Facebook.
+            </p>
+            <p>
+                And there are two kinds of pages a user sees on Facebook:
+            </p>
+            <ul>
+                <li><strong>Newsfeed:</strong> posts made by friends of the user.</li>
+                <li><strong>Profile page:</strong> it has information about a particular user and his posts.</li>
+            </ul>
+        </section>
+
+        <!-- Data Schema -->
+        <section>
+            <h2>Data Schema</h2>
+            <p>
+                If all the related information (user info, user_friend info, and posts info) could fit on a single machine, computing the newsfeed and profile page would become easy.
+            </p>
+            <p><strong>Data Tables:</strong></p>
+            <ul>
+                <li>
+                    <strong>Users Table:</strong>
+                    <ul>
+                        <li><code>user_id</code></li>
+                        <li><code>name</code></li>
+                        <li><code>email</code></li>
+                        <li><code>relationship_status</code></li>
+                        <li><code>last_active</code></li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>User_Friends Table:</strong>
+                    <ul>
+                        <li><code>user_id</code></li>
+                        <li><code>friend_id</code></li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Posts Table:</strong>
+                    <ul>
+                        <li><code>post_id</code></li>
+                        <li><code>user_id</code> (author of the post)</li>
+                        <li><code>text</code></li>
+                        <li><code>timestamp</code></li>
+                        <li><code>location_id</code></li>
+                        <li><code>media_path</code> (for images/videos)</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <!-- UML Class Diagram -->
+            <div class="uml-diagram">
+                <div class="mermaid">
+                    classDiagram
+                        class User {
+                            +int user_id
+                            +string name
+                            +string email
+                            +string relationship_status
+                            +datetime last_active
+                        }
+                        class User_Friends {
+                            +int user_id
+                            +int friend_id
+                        }
+                        class Post {
+                            +int post_id
+                            +int user_id
+                            +string text
+                            +datetime timestamp
+                            +int location_id
+                            +string media_path
+                        }
+                        User "1" -- "many" Post : makes
+                        User "1" -- "many" User_Friends : has
+                </div>
+                <p><em>Figure 1: UML Class Diagram of Data Schema</em></p>
+            </div>
+        </section>
+
+        <!-- Simplified Queries -->
+        <section>
+            <h2>Computing Newsfeed and Profile Page on a Single Machine</h2>
+            <p>
+                <strong>Newsfeed</strong><br>
+                Posts made by friends of the user.
+            </p>
+            <p>We can use the query:</p>
+            <pre><code>
+SELECT * FROM User_friends a
+JOIN Posts b ON a.friend_id = b.user_id
+WHERE a.user_id = &lt;user_id&gt;
+  AND b.timestamp &gt; NOW() - INTERVAL '30 days'
+LIMIT x OFFSET y;
+            </code></pre>
+            <p>
+                <strong>Profile Page</strong><br>
+                Posts made by the user.
+            </p>
+            <p>We can use the query:</p>
+            <pre><code>
+SELECT * FROM Posts
+WHERE user_id = &lt;user_id&gt;
+LIMIT x OFFSET y;
+            </code></pre>
+            <p>
+                In the above queries, “LIMIT x OFFSET y” is done to paginate results as there could be a lot of matching entries.
+            </p>
+        </section>
+
+        <!-- Sharding Challenges -->
+        <section>
+            <h2>Challenges with Data Sharding</h2>
+            <p>
+                Here, the assumption is made that all the information fits in the single machine, but this is not the case generally. Therefore, information needs to be sharded between the machines.
+            </p>
+            <p>
+                <strong>So, what will be the sharding key?</strong>
+            </p>
+            <p>
+                If we use <code>user_id</code> as the sharding key, that means for a given user, all their attributes, their friend list, and posts made by them become one entity and would be on one machine.
+            </p>
+            <p>
+                However, posts made by friends of the user will be on the machine assigned to the friend's <code>user_id</code> [Not guaranteed to be on the same machine].
+            </p>
+            <p>
+                If you come and ask for information to be fetched to show the profile page of <code>user_id X</code>, that is simple. I go to the machine for X and get user attributes, friend list, and posts made by X (paginated).
+            </p>
+            <p>
+                However, what happens when I ask for the newsfeed for user X? For the newsfeed, I need posts made by friends of X. If I go to the machine for X, that is guaranteed to have the list of friends of X, but not guaranteed to have posts made by those friends, as those friends could be assigned to other machines. That could become an extremely time-consuming process.
+            </p>
+
+            <!-- UML Diagram for Sharding -->
+            <div class="uml-diagram">
+                <div class="mermaid">
+                    graph LR
+                        subgraph Shard_X [Shard for User X]
+                            UserX[User X]
+                            FriendsX[Friends of X]
+                            PostsX[Posts by X]
+                        end
+                        subgraph Shard_Friend1 [Shard for Friend 1]
+                            Friend1[Friend 1]
+                            PostsF1[Posts by Friend 1]
+                        end
+                        subgraph Shard_FriendN [Shard for Friend N]
+                            FriendN[Friend N]
+                            PostsFN[Posts by Friend N]
+                        end
+                        UserX -- Has friends --> FriendsX
+                        FriendsX -- On different shards --> PostsF1 & PostsFN
+                </div>
+                <p><em>Figure 2: UML Diagram of Data Sharding Challenges</em></p>
+            </div>
+        </section>
+
+        <!-- Optimizing Newsfeed Fetch with Global Cache -->
+        <section>
+            <h2>Optimizing Newsfeed Fetch with a Global Cache</h2>
+            <p>
+                To address the challenges of fetching friends' posts across different shards, we store all recent posts (e.g., from the last 30 days) in a separate, centralized database—referred to as the <strong>global cache</strong>.
+            </p>
+            <p><strong>How It Works:</strong></p>
+            <ol>
+                <li>
+                    <strong>Storage of Recent Posts:</strong>
+                    <ul>
+                        <li>All posts made within the last 30 days are stored in the global cache.</li>
+                        <li>The cache is replicated across multiple machines to handle high read volumes and provide redundancy.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Fetching Friend IDs:</strong>
+                    <ul>
+                        <li>When a user requests their newsfeed, the system retrieves their list of friend IDs from their user shard.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Retrieving Friends' Posts:</strong>
+                    <ul>
+                        <li>The system queries the global cache using the friend IDs to retrieve recent posts made by these friends.</li>
+                        <li>This avoids the need to access multiple shards where each friend's data might reside.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Aggregating and Sorting Posts:</strong>
+                    <ul>
+                        <li>Retrieved posts are aggregated and sorted based on relevance or recency.</li>
+                        <li>The sorted list forms the user's newsfeed.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Delivering the Newsfeed:</strong>
+                    <ul>
+                        <li>The newsfeed is sent back to the user for display.</li>
+                    </ul>
+                </li>
+            </ol>
+            <p><strong>Benefits of Using the Global Cache:</strong></p>
+            <ul>
+                <li><strong>Efficiency:</strong> Eliminates the need for expensive cross-shard queries.</li>
+                <li><strong>Scalability:</strong> Easily handles increased loads by adding more machines to the cache cluster.</li>
+                <li><strong>Reduced Latency:</strong> Provides quick data access, improving user experience.</li>
+                <li><strong>Simplified Updates:</strong> Avoids the complexities of updating individual newsfeed caches, especially when changing algorithms.</li>
+            </ul>
+
+            <!-- Updated UML Sequence Diagram -->
+            <div class="uml-diagram">
+                <div class="mermaid">
+                    sequenceDiagram
+                        participant User
+                        participant UserShard
+                        participant GlobalCache
+                        User->>UserShard: Request friend IDs
+                        UserShard-->>User: Return friend IDs
+                        User->>GlobalCache: Query posts WHERE user_id IN friend IDs
+                        GlobalCache-->>User: Return recent friends' posts
+                        User->>User: Aggregate and display newsfeed
+                </div>
+                <p><em>Figure 3: UML Sequence Diagram of Newsfeed Fetch Using Global Cache</em></p>
+            </div>
+
+            <p><strong>Managing the Global Cache:</strong></p>
+            <ul>
+                <li>
+                    <strong>Data Deletion:</strong>
+                    <ul>
+                        <li>Posts older than 30 days are periodically deleted from the global cache to manage storage efficiently.</li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Handling New Posts:</strong>
+                    <ul>
+                        <li>When a user creates a new post, it's added to both their user shard and the global cache.</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+
+        <!-- Estimating Storage Requirements -->
+        <section>
+            <h2>Estimating Storage Requirements</h2>
+            <p><strong>Calculations:</strong></p>
+            <ol>
+                <li><strong>Daily Active Users (DAU):</strong> 500 million.</li>
+                <li><strong>Users Who Post (1% of DAU):</strong> 5 million.</li>
+                <li><strong>Average Posts per User per Day:</strong> 4.</li>
+                <li><strong>Total Posts per Day:</strong> 5 million × 4 = 20 million posts.</li>
+                <li><strong>Estimated Size per Post:</strong>
+                    <ul>
+                        <li><strong>Text Content:</strong> 250 bytes.</li>
+                        <li><strong>Metadata:</strong> 8 bytes each for <code>post_id</code>, <code>user_id</code>, <code>timestamp</code>, <code>location_id</code> = 32 bytes.</li>
+                        <li><strong>Media Path (if applicable):</strong> 24 bytes.</li>
+                        <li><strong>Total Approximate Size:</strong> ~300 bytes per post.</li>
+                    </ul>
+                </li>
+                <li><strong>Total Daily Storage:</strong> 20 million posts × 300 bytes ≈ 6 GB.</li>
+                <li><strong>Storage for 30 Days:</strong> 6 GB/day × 30 days = 180 GB.</li>
+            </ol>
+            <p><strong>Conclusion:</strong> Storing 180 GB of recent posts is practical and allows for replication.</p>
+        </section>
+
+        <!-- Advantages of This Approach -->
+        <section>
+            <h2>Advantages of This Approach</h2>
+            <p><strong>Efficiency:</strong></p>
+            <ul>
+                <li><strong>Reduced Latency:</strong> Fetching from the global cache is faster than aggregating data from multiple shards.</li>
+                <li><strong>Scalability:</strong> The system can handle more users and data by adding more replicas of the global cache.</li>
+            </ul>
+            <p><strong>Storage Management:</strong></p>
+            <ul>
+                <li><strong>Controlled Size:</strong> By storing only recent posts, storage remains within manageable limits.</li>
+                <li><strong>Data Freshness:</strong> Users receive up-to-date content without significant delays.</li>
+            </ul>
+            <p><strong>Simplicity:</strong></p>
+            <ul>
+                <li><strong>Simplified Reads:</strong> A single query retrieves all necessary posts.</li>
+                <li><strong>Easier Maintenance:</strong> Updating the newsfeed algorithm involves modifying query logic rather than rebuilding caches.</li>
+            </ul>
+        </section>
+
+        <!-- Conclusion -->
+        <section>
+            <h2>Conclusion</h2>
+            <p>
+                By leveraging a centralized, replicated global cache for recent posts and fetching friends' posts on-demand, Facebook can efficiently compute users' newsfeeds without incurring the high costs associated with per-user caching or extensive cross-shard queries. This approach offers a balance between performance, scalability, and storage efficiency.
+            </p>
+            <p><strong>Key Takeaways:</strong></p>
+            <ul>
+                <li><strong>Efficient Data Access:</strong> Centralizing recent posts simplifies and speeds up data retrieval.</li>
+                <li><strong>Scalable Architecture:</strong> Replication and sharding strategies support a growing user base.</li>
+                <li><strong>Optimized Storage:</strong> Limiting the dataset to recent posts keeps storage manageable.</li>
+                <li><strong>Dynamic Newsfeed:</strong> Generating the newsfeed on-demand ensures up-to-date content without overwhelming the system with writes.</li>
+            </ul>
+        </section>
+
+    </div>
+
+    <!-- Icons and Images -->
+    <div class="icons-images">
+        <h2>Icons and Images</h2>
+        <p>
+            <img src="icon_database.png" alt="Database Icon" class="icon">
+            Database Icon
+        </p>
+        <p>
+            <img src="icon_server.png" alt="Server Icon" class="icon">
+            Server Icon
+        </p>
+        <!-- Add more icons as needed -->
+    </div>
+
+</div>
+
+<!-- Footer -->
+<footer class="bg-dark text-white text-center py-3 mt-5">
+    &copy; 2023 Facebook's Newsfeed Analysis
+</footer>
+
+<!-- Bootstrap JS and dependencies -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Bootstrap Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Text-to-Voice Script -->
+<script>
+    $(document).ready(function(){
+        var synthesis = window.speechSynthesis;
+        var isSpeaking = false;
+        var utterance = new SpeechSynthesisUtterance($('#content').text());
+
+        $('#readBtn').click(function(){
+            if(!isSpeaking){
+                synthesis.speak(utterance);
+                isSpeaking = true;
+            } else {
+                synthesis.resume();
+            }
+        });
+
+        $('#pauseBtn').click(function(){
+            synthesis.pause();
+        });
+
+        $('#stopBtn').click(function(){
+            synthesis.cancel();
+            isSpeaking = false;
+        });
+    });
+</script>
+
+</body>
+</html>
