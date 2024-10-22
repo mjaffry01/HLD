@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Design Theorems Explained</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        h1, h2, h3, h4 {
+            color: #2c3e50;
+        }
+        .tts-controls {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .tts-controls button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #3498db;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+        .tts-controls button:hover {
+            background-color: #2980b9;
+        }
+        .tts-controls button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        ul, ol {
+            margin-left: 20px;
+        }
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .content-section {
+            margin-bottom: 40px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>System Design: CAP Theorem & PACELC Theorem Explained with the RemindMe Analogy</h1>
+    
+    <div class="content-section">
+        <h2>1. CAP Theorem</h2>
+        
+        <h3>1.1 Introduction</h3>
+        
+        <p>
+            The <strong>CAP Theorem</strong> is a fundamental principle in distributed system design, proposed by Eric Brewer in 2000. It states that a distributed system can simultaneously provide only two out of the following three guarantees:
+        </p>
+        
+        <ul>
+            <li><strong>Consistency (C):</strong> Every read receives the most recent write or an error.</li>
+            <li><strong>Availability (A):</strong> Every request receives a (non-error) response, without the guarantee that it contains the most recent write.</li>
+            <li><strong>Partition Tolerance (P):</strong> The system continues to operate despite arbitrary partitioning due to network failures.</li>
+        </ul>
+        
+        <p>
+            In essence, in the presence of a network partition (which is a given in distributed systems), a system must choose between **Consistency** and **Availability**.
+        </p>
+        
+        <h3>1.2 Real-Life Example: RemindMe Company</h3>
+        
+        <p>
+            Let's illustrate the CAP Theorem with a story about a company called <strong>RemindMe</strong>.
+        </p>
+        
+        <h4>Scenario Overview</h4>
+        
+        <p>
+            Founded in 1970, RemindMe's purpose was to help people remember important tasks, such as meetings or flights, by visiting their homes and waking them up. As the business grew, it transitioned into a reminder service where clients could call in to get reminders throughout the day.
+        </p>
+        
+        <h4>System Architecture</h4>
+        
+        <p>
+            To handle the increasing demand, the company hired an employee and set up a centralized IVR (Interactive Voice Response) system. When a client called, the IVR would route the call either to the owner or the employee, depending on availability. For a while, this system worked smoothly.
+        </p>
+        
+        <h4>Issue Encountered</h4>
+        
+        <p>
+            However, one day the employee had to travel and was "off the grid." During this time, a client called the service, and the owner took the call, noting the client’s reminders in his notepad. The next day, the employee returned but did not have access to the notes the owner took. When the client called again to verify their reminders, the employee checked his own notepad, found no tasks, and informed the client that there was nothing scheduled for them. As a result, the client missed a flight due to the incorrect information provided by the service.
+        </p>
+        
+        <h4>Analysis of the Scenario</h4>
+        
+        <p>
+            This scenario exemplifies the issues addressed by the CAP Theorem:
+        </p>
+        
+        <ul>
+            <li><strong>Consistency:</strong> The data was not consistent between the owner and employee.</li>
+            <li><strong>Availability:</strong> The system provided an answer (availability), but it was incorrect.</li>
+            <li><strong>Partition Tolerance:</strong> The system failed to handle the communication breakdown (partition).</li>
+        </ul>
+        
+        <p>
+            The problem arises when parts of a distributed system (like the owner and employee’s notepads) are unable to communicate due to a partition. Partition Tolerance refers to how a system copes with such communication breakdowns. In an ideal system, they would have recognized the communication failure and informed the client that the system was down, rather than providing inaccurate information.
+        </p>
+        
+        <h4>Conclusion on CAP Theorem</h4>
+        
+        <p>
+            The CAP Theorem highlights the inherent trade-offs in distributed systems. Designers must prioritize which two of the three guarantees (Consistency, Availability, Partition Tolerance) are most critical for their application's requirements.
+        </p>
+    </div>
+    
+    <div class="content-section">
+        <h2>2. PACELC Theorem</h2>
+        
+        <h3>2.1 Introduction</h3>
+        
+        <p>
+            While the CAP Theorem addresses trade-offs during network partitions, it doesn't consider the system's behavior under normal operation (i.e., when there is no partition). The <strong>PACELC Theorem</strong>, proposed by Daniel J. Abadi, extends CAP by incorporating these additional trade-offs.
+        </p>
+        
+        <p>
+            <strong>PACELC</strong> stands for:
+        </p>
+        
+        <ul>
+            <li><strong>P:</strong> Partition tolerance</li>
+            <li><strong>A/C:</strong> Availability or Consistency during a Partition</li>
+            <li><strong>E:</strong> Else (when there is no Partition)</li>
+            <li><strong>L/C:</strong> Latency or Consistency during normal operation</li>
+        </ul>
+        
+        <p>
+            **Formal Statement:**
+        </p>
+        
+        <blockquote>
+            <em>If there is a Partition (P), a system must choose between Availability (A) and Consistency (C). Else (E), when the system is running normally, it must choose between Latency (L) and Consistency (C).</em>
+        </blockquote>
+        
+        <h3>2.2 PACELC Explained with RemindMe Analogy</h3>
+        
+        <p>
+            Continuing with the <strong>RemindMe</strong> company analogy, let's explore how the PACELC Theorem applies.
+        </p>
+        
+        <h4>Normal Operation (No Partition)</h4>
+        
+        <p>
+            Under normal conditions, the RemindMe system operates smoothly. Clients call in, and the IVR routes their calls to either the owner or the employee based on availability. Both keep synchronized records of reminders.
+        </p>
+        
+        <h4>Trade-Off During Normal Operation: Latency vs. Consistency</h4>
+        
+        <p>
+            Even without a partition, RemindMe faces a trade-off between **Latency** and **Consistency**:
+        </p>
+        
+        <ul>
+            <li><strong>Consistency (C):</strong> Ensuring that both the owner and employee have the latest reminders updated in real-time.</li>
+            <li><strong>Latency (L):</strong> Minimizing the time taken to update and synchronize reminders across both managers.</li>
+        </ul>
+        
+        <p>
+            **Scenario:**
+        </p>
+        
+        <ul>
+            <li><strong>High Consistency Approach:</strong> Every time a reminder is added or updated, both the owner and employee immediately synchronize their notepads before confirming success to the client.</li>
+            <li><strong>Low Latency Approach:</strong> Reminders are updated locally and synchronized asynchronously, allowing quicker responses to clients but with a potential delay in consistency.</li>
+        </ul>
+        
+        <h4>Scenario Demonstrating PACELC Trade-Offs</h4>
+        
+        <p>
+            Suppose RemindMe opts for a **High Consistency** approach:
+        </p>
+        
+        <ul>
+            <li><strong>Pros:</strong> Both the owner and employee always have the latest reminders, preventing inconsistencies.</li>
+            <li><strong>Cons:</strong> Synchronizing data in real-time introduces latency, making the system slower to respond to client requests.</li>
+        </ul>
+        
+        <p>
+            Alternatively, if RemindMe chooses a **Low Latency** approach:
+        </p>
+        
+        <ul>
+            <li><strong>Pros:</strong> Quick responses to client calls enhance user experience.</li>
+            <li><strong>Cons:</strong> Reminders are synchronized asynchronously, leading to temporary inconsistencies. This could result in scenarios where the employee lacks updated reminders, as seen earlier.</li>
+        </ul>
+        
+        <h3>2.3 PACELC During Partition</h3>
+        
+        <p>
+            Revisiting the earlier scenario where the employee was "off the grid," let's analyze it through the PACELC lens.
+        </p>
+        
+        <h4>During Network Partition (P):</h4>
+        
+        <p>
+            A partition occurs when the owner and employee cannot communicate. According to PACELC:
+        </p>
+        
+        <ul>
+            <li><strong>Choose Between Availability (A) and Consistency (C):</strong></li>
+        </ul>
+        
+        <ul>
+            <li><strong>Consistency (C) Over Availability (A):</strong> RemindMe could choose to maintain consistency by rejecting or delaying new reminders until the partition is resolved. This ensures no inconsistencies but reduces availability.</li>
+            <li><strong>Availability (A) Over Consistency (C):</strong> Alternatively, RemindMe could continue to accept and process reminders on the available side, ensuring high availability but risking data inconsistencies.</li>
+        </ul>
+        
+        <h4>Trade-Offs in Action</h4>
+        
+        <p>
+            In the provided scenario, RemindMe chose **Availability (A)** over **Consistency (C)** during the partition by allowing the owner to take calls and record reminders independently. This led to inconsistencies, as the employee lacked the updated reminders.
+        </p>
+        
+        <h3>2.4 Conclusion on PACELC Theorem</h3>
+        
+        <p>
+            The PACELC Theorem provides a more nuanced understanding of the trade-offs in distributed systems by considering both scenarios:
+        </p>
+        
+        <ul>
+            <li><strong>During Partitions (P):</strong> Choose between Availability (A) and Consistency (C).</li>
+            <li><strong>Else (E) During Normal Operations:</strong> Choose between Latency (L) and Consistency (C).</li>
+        </ul>
+        
+        <p>
+            In the context of RemindMe:
+        </p>
+        
+        <ul>
+            <li>During a partition, RemindMe had to choose between being available (serving reminders) and maintaining consistency (accurate data across managers).</li>
+            <li>During normal operations, RemindMe had to balance between quick response times (low latency) and ensuring that both managers had consistent and up-to-date reminders.</li>
+        </ul>
+        
+        <h4>Optimizing with PACELC</h4>
+        
+        <p>
+            To optimize operations, RemindMe could adopt the following strategies:
+        </p>
+        
+        <ul>
+            <li><strong>Hybrid Approach:</strong> Maintain strong consistency for critical reminders while allowing eventual consistency for non-critical tasks. This balances accuracy with responsiveness.</li>
+            <li><strong>Enhanced Synchronization:</strong> Implement better data synchronization mechanisms to reduce latency while maintaining consistency.</li>
+            <li><strong>Failover Systems:</strong> Introduce backup systems that can take over during partitions to maintain availability without sacrificing consistency.</li>
+        </ul>
+        
+        <h4>Final Thoughts</h4>
+        
+        <p>
+            Understanding the PACELC Theorem allows system designers and operators to make informed decisions about trade-offs between Consistency, Availability, and Latency, both during partitions and normal operations. By aligning these decisions with business priorities and technical requirements, systems like RemindMe can achieve optimal performance and reliability.
+        </p>
+    </div>
+    
+    <div class="tts-controls">
+        <button id="startBtn">Start</button>
+        <button id="pauseBtn" disabled>Pause</button>
+        <button id="stopBtn" disabled>Stop</button>
+    </div>
+    
+    <script>
+        // Check if the browser supports the Web Speech API
+        if ('speechSynthesis' in window) {
+            const startBtn = document.getElementById('startBtn');
+            const pauseBtn = document.getElementById('pauseBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const content = document.body.innerText; // Get all text from the body excluding script
+
+            let utterance = new SpeechSynthesisUtterance(content);
+            utterance.rate = 1; // Speed of the speech
+            utterance.pitch = 1; // Pitch of the speech
+
+            // Start Button Event
+            startBtn.addEventListener('click', () => {
+                window.speechSynthesis.cancel(); // Cancel any ongoing speech
+                utterance = new SpeechSynthesisUtterance(content);
+                window.speechSynthesis.speak(utterance);
+                startBtn.disabled = true;
+                pauseBtn.disabled = false;
+                stopBtn.disabled = false;
+            });
+
+            // Pause Button Event
+            pauseBtn.addEventListener('click', () => {
+                if (window.speechSynthesis.speaking) {
+                    if (window.speechSynthesis.paused) {
+                        window.speechSynthesis.resume();
+                        pauseBtn.textContent = 'Pause';
+                    } else {
+                        window.speechSynthesis.pause();
+                        pauseBtn.textContent = 'Resume';
+                    }
+                }
+            });
+
+            // Stop Button Event
+            stopBtn.addEventListener('click', () => {
+                window.speechSynthesis.cancel();
+                startBtn.disabled = false;
+                pauseBtn.disabled = true;
+                pauseBtn.textContent = 'Pause';
+                stopBtn.disabled = true;
+            });
+
+            // When speech ends, reset buttons
+            utterance.onend = () => {
+                startBtn.disabled = false;
+                pauseBtn.disabled = true;
+                pauseBtn.textContent = 'Pause';
+                stopBtn.disabled = true;
+            };
+        } else {
+            // If the browser does not support Speech Synthesis
+            const controls = document.querySelector('.tts-controls');
+            controls.innerHTML = '<p>Your browser does not support Speech Synthesis.</p>';
+        }
+    </script>
+    
+</body>
+</html>

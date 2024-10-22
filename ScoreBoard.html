@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Design: Global Caching for High-Traffic Rank Lists</title>
+    <!-- Bootstrap CSS for styling -->
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-M2VMdX1JZ3K8Ht1hEeA8PTP1OWxP6lF6LVH9KvH3VdASUeP5XkX6V2z0E6yG9h1e"
+      crossorigin="anonymous"
+    >
+    <!-- Font Awesome for icons -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+      rel="stylesheet"
+    >
+    <!-- Mermaid.js for UML Diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script>
+        // Initialize Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: { curve: 'linear' },
+            sequence: { actorMargin: 50 }
+        });
+    </script>
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .section-title {
+            color: #343a40;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+        .diagram {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .mermaid {
+            margin: 20px auto;
+            max-width: 100%;
+        }
+        .component-box {
+            padding: 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            background-color: #ffffff;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .component-icon {
+            font-size: 50px;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+        ul li i {
+            margin-right: 8px;
+            color: #007bff;
+        }
+        ol li i {
+            margin-right: 8px;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- Page Header -->
+        <header class="text-center mb-5">
+            <h1 class="section-title"><i class="fas fa-server"></i> System Design: Global Caching for High-Traffic Rank Lists</h1>
+            <p class="lead">Optimizing rank list performance in high-traffic contests using Redis global caching strategies.</p>
+        </header>
+
+        <!-- Problem Statement -->
+        <section>
+            <h2 class="section-title"><i class="fas fa-exclamation-triangle"></i> Problem Statement</h2>
+            <p>
+                In high-traffic coding contests, efficiently managing and displaying the rank list is crucial for user experience. The system architecture involves:
+            </p>
+            <ul>
+                <li><i class="fas fa-network-wired"></i> <strong>Architecture</strong>: User requests are sent to a load balancer, which directs traffic to multiple application servers. These servers interact with a database that stores metadata (e.g., problem descriptions, file paths) and retrieves test cases from AWS S3 for solution verification.</li>
+                <li><i class="fas fa-challenges"></i> <strong>Challenges</strong>:
+                    <ul>
+                        <li><i class="fas fa-users"></i> <strong>High User Base</strong>: 1 million users making frequent submissions, resulting in an estimated 350 submissions per second.</li>
+                        <li><i class="fas fa-bolt"></i> <strong>Performance Bottlenecks</strong>: The current workflow involves repeatedly fetching large test cases (5–10 MB each) from S3 for every submission, causing significant load on the database and increased latency.</li>
+                        <li><i class="fas fa-database"></i> <strong>Database Load</strong>: Frequent rank list computations and database hits lead to scalability issues and slow response times during peak traffic.</li>
+                    </ul>
+                </li>
+            </ul>
+            <div class="diagram">
+                <!-- Mermaid Diagram: Problem Statement Overview -->
+                <div class="mermaid">
+                    graph TD
+                        A[High Volume Submissions] --> B[Application Servers]
+                        B --> C["AWS S3 Test Case Storage"]
+                        B --> D[(Database)]
+                        C --> D
+                        A --> E[Performance Bottlenecks]
+                        E --> F[Increased Latency]
+                        E --> G[Scalability Issues]
+                </div>
+                <p><em>Figure 1: Problem Statement Overview</em></p>
+            </div>
+        </section>
+
+        <!-- Solution -->
+        <section>
+            <h2 class="section-title"><i class="fas fa-lightbulb"></i> Solution</h2>
+            <p>
+                To mitigate the performance bottlenecks and reduce the load on the database, implementing a **Global Caching** strategy using **Redis** is proposed. This approach involves periodically computing and caching the rank list in a centralized cache accessible by all application servers.
+            </p>
+
+            <!-- Caching Metadata - Global Caching -->
+            <h3 class="section-title"><i class="fas fa-sync"></i> Caching Metadata - Global Caching</h3>
+            <p>
+                Consider the scenario of a rank list in a contest with immense traffic. Participants may frequently access the rank list page to check their standings. Computing and displaying the rank list in real-time for every request is computationally expensive, especially when scores are frequently updated. Fetching the rank list directly from the database for each request results in high latency and excessive load on the database.
+            </p>
+            <ul>
+                <li><i class="fas fa-check-circle"></i> <strong>Periodic Computation and Caching</strong>: Compute the rank list periodically (e.g., every minute) and cache the static rank list for a specific duration. This reduces the number of real-time computations and database queries.</li>
+                <li><i class="fas fa-server"></i> <strong>Global Cache Advantage</strong>: Instead of storing the rank list on individual application servers, use a global cache (e.g., Redis) shared by all servers. This ensures that only one cache miss occurs per interval, significantly reducing the load on the database.</li>
+            </ul>
+            <div class="diagram">
+                <!-- Mermaid Diagram: System Architecture -->
+                <div class="mermaid">
+                    graph TD
+                        User[User] -->|Requests Rank List| LoadBalancer["Load Balancer"]
+                        LoadBalancer -->|Directs to| AppServer["Application Server"]
+                        AppServer -->|Checks Cache| Redis["Redis Global Cache"]
+                        Redis -->|Cache Hit| CachedRankList["Cached Rank List"]
+                        Redis -->|Cache Miss| DB["Database"]
+                        DB --> S3["AWS S3"]
+                        DB -->|Compute Rank List| AppServer
+                        AppServer --> Redis
+                        AppServer --> User
+                </div>
+                <p><em>Figure 2: System Architecture Overview</em></p>
+            </div>
+
+            <!-- Workflow Diagram -->
+            <h3 class="section-title"><i class="fas fa-tasks"></i> Workflow Diagram</h3>
+            <div class="diagram">
+                <!-- Mermaid Diagram: Rank List Workflow -->
+                <div class="mermaid">
+                    sequenceDiagram
+                        participant U as User
+                        participant LB as Load Balancer
+                        participant AS as Application Server
+                        participant R as Redis Global Cache
+                        participant DB as Database
+                        participant S3 as AWS S3
+
+                        U->>LB: Request Rank List
+                        LB->>AS: Forward Request
+                        AS->>R: Check Cached Rank List
+                        alt Cache Hit
+                            R-->>AS: Return Cached Rank List
+                        else Cache Miss
+                            AS->>DB: Fetch Data for Rank List
+                            DB->>S3: Retrieve Test Cases
+                            S3-->>DB: Return Test Cases
+                            DB-->>AS: Provide Data
+                            AS->>AS: Compute Rank List
+                            AS->>R: Update Cache with Rank List
+                            AS-->>U: Return Computed Rank List
+                        end
+                </div>
+                <p><em>Figure 3: Rank List Workflow</em></p>
+            </div>
+
+            <!-- Redis Details -->
+            <h3 class="section-title"><i class="fas fa-database"></i> Redis for Global Caching</h3>
+            <p>
+                **Redis** is chosen for its efficiency and support for various data structures. It serves as a centralized caching layer, enabling all application servers to access the cached rank list without redundancy.
+            </p>
+            <ul>
+                <li><i class="fas fa-heart"></i> <strong>Data Structures Supported:</strong>
+                    <ul>
+                        <li>String</li>
+                        <li>Integer</li>
+                        <li>List</li>
+                        <li>Set</li>
+                        <li>Sorted Set</li>
+                    </ul>
+                </li>
+                <li><i class="fas fa-star"></i> <strong>Use Cases for Global Caching:</strong>
+                    <ul>
+                        <li>Caching frequently queried data</li>
+                        <li>Storing derived information that is expensive to compute from the database</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+
+        <!-- Conclusion -->
+        <section>
+            <h2 class="section-title"><i class="fas fa-check-double"></i> Conclusion</h2>
+            <p>
+                Implementing a **metadata-based global caching system** using Redis effectively addresses the performance bottlenecks associated with high-volume submissions and dynamic rank list computations. By periodically computing the rank list and caching it centrally, the system significantly reduces database load and latency, ensuring a seamless user experience even under immense traffic.
+            </p>
+            <p>
+                This strategy not only optimizes resource utilization but also enhances scalability and reliability, making it a robust solution for managing high-traffic contest environments.
+            </p>
+        </section>
+
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script
+      src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+      integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-LtrjvnR4JutjSgKzQbC6jq2mtKk7E5oLwA95R1HYw5FkNo7mOeGswT8m4U2A0gMf"
+      crossorigin="anonymous"
+    ></script>
+</body>
+</html>
